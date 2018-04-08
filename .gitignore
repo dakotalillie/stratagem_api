@@ -6,5 +6,5 @@
 # workspace settings
 /.vscode
 
-# database
-*.sqlite3
+# configuration settings
+/stratagem_api/config.py
