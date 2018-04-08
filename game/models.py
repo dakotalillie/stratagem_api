@@ -32,6 +32,9 @@ class Country(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural = "countries"
+
 
 class Territory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
