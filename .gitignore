@@ -5,3 +5,6 @@
 
 # workspace settings
 /.vscode
+
+# database
+*.sqlite3
