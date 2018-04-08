@@ -6,23 +6,31 @@ from django.contrib.auth.models import User
 class Game(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
 
 
 class Country(models.Model):
     COUNTRIES = (
-        ('Austria', 'Austria'),
-        ('England', 'England'),
-        ('France', 'France'),
-        ('Germany', 'Germany'),
-        ('Italy', 'Italy'),
-        ('Russia', 'Russia'),
-        ('Turkey', 'Turkey'),
+        ('Au', 'Austria'),
+        ('En', 'England'),
+        ('Fr', 'France'),
+        ('Ge', 'Germany'),
+        ('It', 'Italy'),
+        ('Ru', 'Russia'),
+        ('Tu', 'Turkey'),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=7, choices=COUNTRIES)
+    name = models.CharField(max_length=2, choices=COUNTRIES)
     game = models.ForeignKey('Game', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,
                              blank=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Territory(models.Model):
@@ -34,6 +42,9 @@ class Territory(models.Model):
     unit = models.OneToOneField('Unit', on_delete=models.SET_NULL, null=True,
                                 blank=True)
 
+    def __str__(self):
+        return self.name
+
 
 class Unit(models.Model):
     UNIT_TYPES = (
@@ -42,8 +53,11 @@ class Unit(models.Model):
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     active = models.BooleanField(default=True)
-    unitType = models.CharField(max_length=1, choices=UNIT_TYPES)
+    unit_type = models.CharField(max_length=1, choices=UNIT_TYPES)
     country = models.ForeignKey('Country', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "%s %s %s" % self.country, self.unit_type, self.territory
 
 
 class Turn(models.Model):
@@ -59,8 +73,12 @@ class Turn(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     year = models.PositiveSmallIntegerField(default=1901)
     season = models.CharField(max_length=1, choices=SEASONS)
-    phase = models.CharField(max_length=15, choices=PHASES)
+    phase = models.CharField(max_length=13, choices=PHASES)
     game = models.ForeignKey('Game', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "%s %s %s" % self.phase, self.season, self.year
 
 
 class Order(models.Model):
@@ -94,3 +112,4 @@ class Order(models.Model):
     aux_destination = models.ForeignKey('Territory', on_delete=models.CASCADE,
                                         blank=True, null=True,
                                         related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
