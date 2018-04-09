@@ -10,46 +10,39 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
 
-class Login(ObtainAuthToken):
+# this all isn't necessary currently but will become useful again with
+# the incorporation of React-Router-Redux
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data,
-                                           context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email': user.email,
-            'games': [{'id': x.id,
-                       'title': x.title,
-                       'created_at': x.created_at
-                       } for x in user.games.all()]
-        })
+# class Login(ObtainAuthToken):
+
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.serializer_class(data=request.data,
+#                                            context={'request': request})
+#         serializer.is_valid(raise_exception=True)
+#         user = serializer.validated_data['user']
+#         token, created = Token.objects.get_or_create(user=user)
+#         return Response({
+#             'token': token.key,
+#             'first_name': user.first_name,
+#             'last_name': user.last_name,
+#             'email': user.email,
+#             'games': [{'id': x.id,
+#                        'title': x.title,
+#                        'created_at': x.created_at
+#                        } for x in user.games.all()]
+#         })
 
 
 class Sessions(APIView):
     """
-    Either create a new session given a valid username and password, or
-    confirm that the user is logged in.
+    Return a user's data if they have a valid token.
     """
 
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request, format=None):
-        pass
-
-    def post(self, request, format=None):
-        user = authenticate(username=request.data['username'],
-                            password=request.data['password'])
-        if user is not None:
-            serializer = UserSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'Invalid login credentials'},
-                            status=status.HTTP_401_UNAUTHORIZED)
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GamesList(APIView):
