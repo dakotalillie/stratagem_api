@@ -45,6 +45,23 @@ class Sessions(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class UsersList(APIView):
+    """
+    Create a new user, receive back that user's token.
+    """
+
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, format=None):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            token = Token.objects.get(user=user)
+            return Response({'token': token.key},
+                            status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class GamesList(APIView):
     """
     List all games belonging to a particular player, or create a new game.
