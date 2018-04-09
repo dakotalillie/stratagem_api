@@ -1,6 +1,6 @@
 import uuid
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -13,9 +13,13 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
+class Player(AbstractUser):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+
 class Game(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    players = models.ManyToManyField(User, through='Country',
+    players = models.ManyToManyField('Player', through='Country',
                                      related_name='games')
     title = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -38,7 +42,7 @@ class Country(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=2, choices=COUNTRIES)
     game = models.ForeignKey('Game', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,
+    user = models.ForeignKey('Player', on_delete=models.SET_NULL, null=True,
                              blank=True)
 
     def __str__(self):

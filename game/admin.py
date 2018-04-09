@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Game, Country, Unit, Territory, Turn, Order
+from django.contrib.auth.admin import UserAdmin
+from .models import Player, Game, Country, Unit, Territory, Turn, Order
 
 
 class CountryInline(admin.TabularInline):
@@ -12,3 +13,4 @@ class GameAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Game, GameAdmin)
+admin.site.register(Player, UserAdmin)

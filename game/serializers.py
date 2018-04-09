@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from .models import Game
+from .models import Game, Player
 
 
 class GameSerializer(serializers.ModelSerializer):
@@ -15,6 +14,6 @@ class UserSerializer(serializers.ModelSerializer):
     games = GameSerializer(many=True, read_only=True)
 
     class Meta:
-        model = User
+        model = Player
         fields = ('id', 'username', 'email',
                   'first_name', 'last_name', 'games')
