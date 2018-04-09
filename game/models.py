@@ -15,6 +15,8 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 
 class Game(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    players = models.ManyToManyField(User, through='Country',
+                                     related_name='games')
     title = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
