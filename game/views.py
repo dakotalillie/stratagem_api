@@ -5,7 +5,7 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from game.models import Game, Country, Territory, Unit, Turn, Order
-from game.serializers import UserSerializer
+from game.serializers import UserSerializer, GameSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
@@ -18,13 +18,15 @@ class Login(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        countries = user.country_set.all()
-        pdb.set_trace()
         return Response({
             'token': token.key,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'email': user.email
+            'email': user.email,
+            'games': [{'id': x.id,
+                       'title': x.title,
+                       'created_at': x.created_at
+                       } for x in user.games.all()]
         })
 
 
