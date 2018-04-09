@@ -31,16 +31,16 @@ class Game(models.Model):
 
 class Country(models.Model):
     COUNTRIES = (
-        ('Au', 'Austria'),
-        ('En', 'England'),
-        ('Fr', 'France'),
-        ('Ge', 'Germany'),
-        ('It', 'Italy'),
-        ('Ru', 'Russia'),
-        ('Tu', 'Turkey'),
+        ('Austria', 'Austria'),
+        ('England', 'England'),
+        ('France', 'France'),
+        ('Germany', 'Germany'),
+        ('Italy', 'Italy'),
+        ('Russia', 'Russia'),
+        ('Turkey', 'Turkey'),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=2, choices=COUNTRIES)
+    name = models.CharField(max_length=7, choices=COUNTRIES)
     game = models.ForeignKey('Game', on_delete=models.CASCADE)
     user = models.ForeignKey('Player', on_delete=models.SET_NULL, null=True,
                              blank=True)
@@ -64,25 +64,34 @@ class Territory(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural = "territories"
+
 
 class Unit(models.Model):
     UNIT_TYPES = (
-        ('A', 'army'),
-        ('F', 'fleet')
+        ('army', 'army'),
+        ('fleet', 'fleet')
+    )
+    COASTS = (
+        ('NC', 'north'),
+        ('EC', 'east'),
+        ('SC', 'south')
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     active = models.BooleanField(default=True)
     unit_type = models.CharField(max_length=1, choices=UNIT_TYPES)
     country = models.ForeignKey('Country', on_delete=models.CASCADE)
+    coast = models.CharField(max_length=2, choices=COASTS, blank=True)
 
     def __str__(self):
-        return "%s %s %s" % self.country, self.unit_type, self.territory
+        return "%s %s %s" % (self.country, self.unit_type, self.territory)
 
 
 class Turn(models.Model):
     SEASONS = (
-        ('S', 'spring'),
-        ('F', 'fall'),
+        ('spring', 'spring'),
+        ('fall', 'fall'),
     )
     PHASES = (
         ('diplomatic', 'diplomatic'),
@@ -97,7 +106,7 @@ class Turn(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "%s %s %s" % self.phase, self.season, self.year
+        return "%s %s %s" % (self.phase, self.season, self.year)
 
 
 class Order(models.Model):

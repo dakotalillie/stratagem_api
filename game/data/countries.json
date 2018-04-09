@@ -1,0 +1,80 @@
+{
+  "England": {
+    "name": "England",
+    "posessive": "English",
+    "homeSupplyCenters": ["Lon", "Lvp", "Edi"],
+    "startingTerritories": ["Lon", "Lvp", "Edi", "Wal", "Yor", "Cly"],
+    "startingUnits": [
+      { "type": "army", "territory": "Lvp", "coast": "" },
+      { "type": "fleet", "territory": "Lon", "coast": "" },
+      { "type": "fleet", "territory": "Edi", "coast": "" }
+    ]
+  },
+  "France": {
+    "name": "France",
+    "posessive": "French",
+    "homeSupplyCenters": ["Par", "Bre", "Mar"],
+    "startingTerritories": ["Par", "Bre", "Mar", "Pic", "Bur", "Gas"],
+    "startingUnits": [
+      { "type": "army", "territory": "Par", "coast": "" },
+      { "type": "army", "territory": "Mar", "coast": "" },
+      { "type": "fleet", "territory": "Bre", "coast": "" }
+    ]
+  },
+  "Germany": {
+    "name": "Germany",
+    "posessive": "German",
+    "homeSupplyCenters": ["Ber", "Kie", "Mun"],
+    "startingTerritories": ["Ber", "Kie", "Mun", "Ruh", "Pru", "Sil"],
+    "startingUnits": [
+      { "type": "army", "territory": "Ber", "coast": "" },
+      { "type": "army", "territory": "Mun", "coast": "" },
+      { "type": "fleet", "territory": "Kie", "coast": "" }
+    ]
+  },
+  "Italy": {
+    "name": "Italy",
+    "posessive": "Italian",
+    "homeSupplyCenters": ["Rom", "Nap", "Ven"],
+    "startingTerritories": ["Rom", "Nap", "Ven", "Pie", "Tus", "Apu"],
+    "startingUnits": [
+      { "type": "army", "territory": "Rom", "coast": "" },
+      { "type": "army", "territory": "Ven", "coast": "" },
+      { "type": "fleet", "territory": "Nap", "coast": "" }
+    ]
+  },
+  "Austria": {
+    "name": "Austria",
+    "posessive": "Austrian",
+    "homeSupplyCenters": ["Vie", "Tri", "Bud"],
+    "startingTerritories": ["Vie", "Tri", "Bud", "Tyr", "Boh", "Gal"],
+    "startingUnits": [
+      { "type": "army", "territory": "Vie", "coast": "" },
+      { "type": "army", "territory": "Bud", "coast": "" },
+      { "type": "fleet", "territory": "Tri", "coast": "" }
+    ]
+  },
+  "Russia": {
+    "name": "Russia",
+    "posessive": "Russian",
+    "homeSupplyCenters": ["Mos", "Stp", "War", "Sev"],
+    "startingTerritories": ["Mos", "Stp", "War", "Sev", "Lvn", "Ukr"],
+    "startingUnits": [
+      { "type": "army", "territory": "Mos", "coast": "" },
+      { "type": "army", "territory": "War", "coast": "" },
+      { "type": "fleet", "territory": "Stp", "coast": "SC" },
+      { "type": "fleet", "territory": "Sev", "coast": "" }
+    ]
+  },
+  "Turkey": {
+    "name": "Turkey",
+    "posessive": "Turkish",
+    "homeSupplyCenters": ["Con", "Ank", "Smy"],
+    "startingTerritories": ["Con", "Ank", "Smy", "Arm", "Syr"],
+    "startingUnits": [
+      { "type": "army", "territory": "Con", "coast": "" },
+      { "type": "army", "territory": "Smy", "coast": "" },
+      { "type": "fleet", "territory": "Ank", "coast": "" }
+    ]
+  }
+}

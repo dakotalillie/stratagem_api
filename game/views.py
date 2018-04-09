@@ -1,4 +1,5 @@
 import pdb
+import json
 
 from django.contrib.auth import authenticate
 from rest_framework import permissions, status
@@ -60,6 +61,46 @@ class UsersList(APIView):
             return Response({'token': token.key},
                             status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class Sandbox(APIView):
+    """
+    Create a new sandbox
+    """
+
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, format=None):
+        game = Game(title='New Sandbox')
+        country_names = ['Austria', 'England', 'France', 'Germany', 'Italy',
+                         'Russia', 'Turkey']
+        countries = {c: Country(name=c, game=game, user=request.user)
+                     for c in country_names}
+        turn = Turn(year=1901, season='spring', phase='diplomatic', game=game)
+
+        with open('game/data/countries.json') as countries_json:
+            country_data = json.loads(countries_json.read())
+
+        with open('game/data/territories.json') as territories_json:
+            territories_data = json.loads(territories_json.read())
+
+        territories = {}
+        units = {}
+
+        for country, data in country_data.items():
+            for terr_abbr in data['startingTerritories']:
+                terr = Territory(name=territories_data[terr_abbr]['name'],
+                                 abbreviation=terr_abbr,
+                                 owner=countries[country])
+                territories[terr_abbr] = terr
+            for unit_dict in data['startingUnits']:
+                unit = Unit(unit_type=unit_dict['type'],
+                            country=countries[country],
+                            territory=territories[unit_dict['territory']],
+                            coast=unit_dict['coast'])
+                units[unit.territory.abbreviation] = unit
+
+        pdb.set_trace()
 
 
 class GamesList(APIView):
