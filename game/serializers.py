@@ -3,16 +3,18 @@ from django.contrib.auth.models import User
 from .models import Game
 
 
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email',
-                  'first_name', 'last_name')
-
-
 class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ('title')
+        fields = ('id', 'title')
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    games = GameSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email',
+                  'first_name', 'last_name', 'games')
