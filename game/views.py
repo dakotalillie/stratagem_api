@@ -65,7 +65,7 @@ class UsersList(APIView):
 
 class Sandbox(APIView):
     """
-    Create a new sandbox
+    Create a new sandbox game
     """
 
     permission_classes = (permissions.IsAuthenticated,)
@@ -100,7 +100,16 @@ class Sandbox(APIView):
                             coast=unit_dict['coast'])
                 units[unit.territory.abbreviation] = unit
 
-        pdb.set_trace()
+        game.save()
+        for country_name, country in countries.items():
+            country.save()
+        turn.save()
+        for terr_abbr, territory in territories.items():
+            territory.save()
+        for terr_abbr, unit in units.items():
+            unit.save()
+
+        return Response({'game_id': game.id}, status=status.HTTP_201_CREATED)
 
 
 class GamesList(APIView):

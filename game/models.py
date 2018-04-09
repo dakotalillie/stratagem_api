@@ -58,8 +58,6 @@ class Territory(models.Model):
     abbreviation = models.CharField(max_length=3)
     owner = models.ForeignKey('Country', on_delete=models.CASCADE, null=True,
                               blank=True)
-    unit = models.OneToOneField('Unit', on_delete=models.SET_NULL, null=True,
-                                blank=True)
 
     def __str__(self):
         return self.name
@@ -79,8 +77,9 @@ class Unit(models.Model):
         ('SC', 'south')
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    territory = models.OneToOneField('Territory', on_delete=models.CASCADE)
     active = models.BooleanField(default=True)
-    unit_type = models.CharField(max_length=1, choices=UNIT_TYPES)
+    unit_type = models.CharField(max_length=5, choices=UNIT_TYPES)
     country = models.ForeignKey('Country', on_delete=models.CASCADE)
     coast = models.CharField(max_length=2, choices=COASTS, blank=True)
 
@@ -100,7 +99,7 @@ class Turn(models.Model):
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     year = models.PositiveSmallIntegerField(default=1901)
-    season = models.CharField(max_length=1, choices=SEASONS)
+    season = models.CharField(max_length=6, choices=SEASONS)
     phase = models.CharField(max_length=13, choices=PHASES)
     game = models.ForeignKey('Game', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
