@@ -161,8 +161,10 @@ class OrdersList(APIView):
     Create and delete orders in batches
     """
 
+    permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request, pk, format=None):
-        pass
+        pdb.set_trace()
 
     def delete(self, request, pk, format=None):
         pass

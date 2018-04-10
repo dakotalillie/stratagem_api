@@ -141,3 +141,7 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_ALLOW_ALL = True
 
 AUTH_USER_MODEL = 'game.Player'
+
+# Configure Django app for Heroku
+import django_heroku
+django_heroku.settings(locals())
