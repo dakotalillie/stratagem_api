@@ -21,18 +21,21 @@ class UserSerializer(serializers.ModelSerializer):
 
 class TerritorySerializer(serializers.ModelSerializer):
 
+    owner = serializers.StringRelatedField(read_only=True)
+
     class Meta:
         model = Territory
-        fields = ('id', 'name', 'abbreviation')
+        fields = ('id', 'name', 'abbreviation', 'owner')
 
 
 class UnitSerializer(serializers.ModelSerializer):
 
     territory = serializers.StringRelatedField(read_only=True)
+    country = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Unit
-        fields = ('id', 'unit_type', 'coast', 'territory')
+        fields = ('id', 'unit_type', 'coast', 'territory', 'country')
 
 
 class CountrySerializer(serializers.ModelSerializer):
