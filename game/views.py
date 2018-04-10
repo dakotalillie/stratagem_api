@@ -2,6 +2,7 @@ import pdb
 import json
 
 from django.contrib.auth import authenticate
+from django.http import Http404
 from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -115,10 +116,7 @@ class Sandbox(APIView):
         for terr_abbr, unit in units.items():
             unit.save()
 
-        serializer = GameDetailSerializer(game)
-        pdb.set_trace()
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({'game_id': game.id}, status=status.HTTP_201_CREATED)
 
 
 class GamesList(APIView):
@@ -138,8 +136,18 @@ class GamesDetail(APIView):
     Retrieve, update, and delete games.
     """
 
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self, pk):
+        try:
+            return Game.objects.get(pk=pk)
+        except Snippet.DoesNotExist:
+            raise Http404
+
     def get(self, request, pk, format=None):
-        pass
+        game = self.get_object(pk)
+        serializer = GameDetailSerializer(game)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, format=None):
         pass

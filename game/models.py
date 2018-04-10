@@ -61,9 +61,6 @@ class Territory(models.Model):
                               blank=True, related_name='territories')
 
     def __str__(self):
-        return self.name
-
-    def __unicode__(self):
         return self.abbreviation
 
     class Meta:
