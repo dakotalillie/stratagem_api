@@ -10,6 +10,7 @@ from game.models import Game, Country, Territory, Unit, Turn, Order
 from game.serializers import UserSerializer, GameDetailSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from game.utils import create_order_from_data
 
 
 # this all isn't necessary currently but will become useful again with
@@ -92,19 +93,19 @@ class Sandbox(APIView):
             for terr_abbr in data['startingTerritories']:
                 terr = Territory(name=territories_data[terr_abbr]['name'],
                                  abbreviation=terr_abbr,
-                                 owner=countries[country])
+                                 owner=countries[country], game=game)
                 territories[terr_abbr] = terr
             for unit_dict in data['startingUnits']:
                 unit = Unit(unit_type=unit_dict['type'],
                             country=countries[country],
                             territory=territories[unit_dict['territory']],
-                            coast=unit_dict['coast'])
+                            coast=unit_dict['coast'], game=game)
                 units[unit.territory.abbreviation] = unit
 
         for terr_abbr, terr_data in territories_data.items():
             if terr_abbr not in territories:
                 terr = Territory(
-                    name=terr_data['name'], abbreviation=terr_abbr)
+                    name=terr_data['name'], abbreviation=terr_abbr, game=game)
                 territories[terr_abbr] = terr
 
         game.save()
@@ -164,6 +165,23 @@ class OrdersList(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, pk, format=None):
+        orders = [create_order_from_data(data)
+                  for unit_id, data in request.data.items()]
+        conflicts = set([])
+        locations = {}
+        # first, determine moves. It is necessary to do this before calculating
+        # supports because support orders may have been issued for non-existant
+        # move/hold orders
+        for order in orders:
+            if order.order_type != 'support':
+                # CASE: no moves recorded for this territory yet
+                if order.destination not in locations:
+                    locations[order.destination] = {order.unit: 1}
+                else:
+                    # CASE: other unit(s) attempting to occupy territory
+                    locations[order.destination].put({order.unit: 1})
+                    conflicts.add(order.destination)
+
         pdb.set_trace()
 
     def delete(self, request, pk, format=None):

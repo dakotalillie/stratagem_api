@@ -28,6 +28,9 @@ class Game(models.Model):
     def __str__(self):
         return self.title
 
+    def current_turn(self):
+        return self.turns.latest('created_at')
+
 
 class Country(models.Model):
     COUNTRIES = (
@@ -59,6 +62,8 @@ class Territory(models.Model):
     abbreviation = models.CharField(max_length=3)
     owner = models.ForeignKey(Country, on_delete=models.CASCADE, null=True,
                               blank=True, related_name='territories')
+    game = models.ForeignKey(Game, on_delete=models.CASCADE,
+                             related_name='territories')
 
     def __str__(self):
         return self.abbreviation
@@ -78,11 +83,17 @@ class Unit(models.Model):
         ('SC', 'south')
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    territory = models.OneToOneField(Territory, on_delete=models.CASCADE)
+    territory = models.OneToOneField(Territory, on_delete=models.CASCADE,
+                                     blank=True, null=True)
+    retreating_from = models.OneToOneField(Territory, on_delete=models.CASCADE,
+                                           blank=True, null=True,
+                                           related_name='retreating_unit')
     active = models.BooleanField(default=True)
     unit_type = models.CharField(max_length=5, choices=UNIT_TYPES)
     country = models.ForeignKey(Country, on_delete=models.CASCADE,
                                 related_name='units')
+    game = models.ForeignKey(Game, on_delete=models.CASCADE,
+                             related_name='units')
     coast = models.CharField(max_length=2, choices=COASTS, blank=True)
 
     def __str__(self):
@@ -135,12 +146,17 @@ class Order(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE,
                              related_name='orders')
     order_type = models.CharField(max_length=7, choices=ORDER_TYPES)
+    origin = models.ForeignKey(Territory, on_delete=models.CASCADE,
+                               related_name='+')
     destination = models.ForeignKey(Territory, on_delete=models.CASCADE,
-                                    blank=True, null=True)
+                                    blank=True, null=True, related_name='+')
     coast = models.CharField(max_length=2, choices=COASTS, blank=True)
     aux_unit = models.ForeignKey(Unit, on_delete=models.CASCADE, blank=True,
                                  null=True, related_name='+', )
     aux_order_type = models.CharField(max_length=4, choices=AUX_ORDER_TYPES)
+    aux_origin = models.ForeignKey(Territory, on_delete=models.CASCADE,
+                                   blank=True, null=True,
+                                   related_name='+')
     aux_destination = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                         blank=True, null=True,
                                         related_name='+')
