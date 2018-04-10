@@ -6,7 +6,7 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from game.models import Game, Country, Territory, Unit, Turn, Order
-from game.serializers import UserSerializer, GameSerializer
+from game.serializers import UserSerializer, GameDetailSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
@@ -100,6 +100,12 @@ class Sandbox(APIView):
                             coast=unit_dict['coast'])
                 units[unit.territory.abbreviation] = unit
 
+        for terr_abbr, terr_data in territories_data.items():
+            if terr_abbr not in territories:
+                terr = Territory(
+                    name=terr_data['name'], abbreviation=terr_abbr)
+                territories[terr_abbr] = terr
+
         game.save()
         for country_name, country in countries.items():
             country.save()
@@ -109,7 +115,10 @@ class Sandbox(APIView):
         for terr_abbr, unit in units.items():
             unit.save()
 
-        return Response({'game_id': game.id}, status=status.HTTP_201_CREATED)
+        serializer = GameDetailSerializer(game)
+        pdb.set_trace()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class GamesList(APIView):
