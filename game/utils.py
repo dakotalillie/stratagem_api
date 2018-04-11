@@ -61,3 +61,12 @@ def map_convoy_route_to_models(data):
     mapped_data['route'] = [Unit.objects.get(pk=unit['id'])
                             for unit in data['route']]
     return mapped_data
+
+
+def more_possible_convoy_routes(convoy_routes, route):
+    count = len([cr for cr in convoy_routes
+                 if cr['origin'] == route['origin'] and
+                 cr['destination'] == route['destination']])
+    if count > 1:
+        return True
+    return False
