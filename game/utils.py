@@ -1,3 +1,4 @@
+import pdb
 from game.models import Game, Country, Territory, Unit, Turn, Order
 
 
@@ -8,25 +9,22 @@ def create_order_from_data(data):
         game=game,
         abbreviation=data['origin']
     )
-    destination = None
+    destination = Territory.objects.get(
+        game=game,
+        abbreviation=data['destination']
+    )
     aux_unit = None
     aux_order_type = None
     aux_origin = None
     aux_destination = None
 
-    if 'destination' in data:
-        destination = Territory.objects.get(
-            game=game,
-            abbreviation=data['destination']
-        )
-    if 'aux_unit' in data:
+    if 'aux_unit_id' in data:
         aux_unit = Unit.objects.get(pk=data['aux_unit_id'])
         aux_order_type = data['aux_order_type']
         aux_origin = Territory.objects.get(
             game=game,
             abbreviation=data.get('aux_origin')
         )
-    if 'aux_destination' in data:
         aux_destination = Territory.objects.get(
             game=game,
             abbreviation=data.get('aux_destination')
@@ -46,3 +44,20 @@ def create_order_from_data(data):
     )
 
     return order
+
+
+def map_convoy_route_to_models(data):
+    mapped_data = {}
+    mapped_data['unit'] = Unit.objects.get(pk=data['unit_id'])
+    game = mapped_data['unit'].game
+    mapped_data['origin'] = Territory.objects.get(
+        game=game,
+        abbreviation=data['origin']
+    )
+    mapped_data['destination'] = Territory.objects.get(
+        game=game,
+        abbreviation=data['destination']
+    )
+    mapped_data['route'] = [Unit.objects.get(pk=unit['id'])
+                            for unit in data['route']]
+    return mapped_data
