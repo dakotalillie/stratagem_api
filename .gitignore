@@ -8,3 +8,6 @@
 
 # configuration settings
 /stratagem_api/config.py
+
+# pycaches
+**/__pycache__/*
