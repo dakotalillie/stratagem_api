@@ -14,9 +14,10 @@ def create_order_from_data(data):
         abbreviation=data['destination']
     )
     aux_unit = None
-    aux_order_type = None
+    aux_order_type = ''
     aux_origin = None
     aux_destination = None
+    via_convoy = False
 
     if 'aux_unit_id' in data:
         aux_unit = Unit.objects.get(pk=data['aux_unit_id'])
@@ -30,6 +31,9 @@ def create_order_from_data(data):
             abbreviation=data.get('aux_destination')
         )
 
+    if 'via_convoy' in data:
+        via_convoy = data['via_convoy']
+
     order = Order(
         turn=game.current_turn(),
         unit=Unit.objects.get(pk=data['unit_id']),
@@ -41,10 +45,10 @@ def create_order_from_data(data):
         aux_order_type=aux_order_type,
         aux_origin=aux_origin,
         aux_destination=aux_destination,
-        via_convoy=data.get('via_convoy')
+        via_convoy=via_convoy
     )
 
-    # TODO: save order here.
+    order.save()
 
     return order
 
@@ -208,31 +212,27 @@ def add_supports(locations, supports, conflicts):
 
 def check_for_illegal_swaps(orders, locations, conflicts):
     for order in orders:
-        # TODO: There has to be a more efficient way to do this.
-        matched_order = None
+        # TODO: Find a more efficient way to do this.
+        match = None
         for other_order in orders:
             if (other_order.destination == order.origin and
                     order.destination == other_order.origin and
                     order.id != other_order.id):
-                matched_order = other_order
-        if matched_order:
+                match = other_order
+        if match:
             unit_in_location = order.unit in locations[order.destination]
-            matched_unit_in_location = (matched_order.unit in
-                                        locations[matched_order.destination])
+            match_in_location = (match.unit in locations[match.destination])
             # Check if matter hasn't already resolved
-            if unit_in_location and matched_unit_in_location:
+            if ((unit_in_location and match_in_location) and not
+                    (order.via_convoy or match.via_convoy)):
                 unit_strength = locations[order.destination][order.unit]
-                other_unit_strength = locations[
-                    matched_order.destination][matched_order.unit]
-                if not (order.via_convoy or matched_order.via_convoy):
-                    if unit_strength >= other_unit_strength:
-                        locations[matched_order.destination].pop(
-                            matched_order.unit)
-                        return_unit_to_origin(
-                            matched_order.unit, locations, conflicts)
-                    if unit_strength <= other_unit_strength:
-                        locations[order.destination].pop(order.unit)
-                        return_unit_to_origin(order.unit, locations, conflicts)
+                match_strength = locations[match.destination][match.unit]
+                if unit_strength >= match_strength:
+                    locations[match.destination].pop(match.unit)
+                    return_unit_to_origin(match.unit, locations, conflicts)
+                if unit_strength <= match_strength:
+                    locations[order.destination].pop(order.unit)
+                    return_unit_to_origin(order.unit, locations, conflicts)
 
 
 def resolve_conflict(conflict_location, locations, conflicts, displaced_units):
@@ -292,11 +292,26 @@ def update_unit_locations(locations, displaced_units):
     for unit in displaced_units:
         unit.retreating_from = unit.territory
         unit.territory = None
-        # TODO: save unit here.
+        unit.save()
     # Map units' territories to their new locations.
     for territory, unit_dict in locations.items():
         # Since at this point the unit dictionary will have only one
         # entry, the run time of this is not as bad as it looks.
         for unit in unit_dict:
             unit.territory = territory
-            # TODO: save unit here.
+            unit.save()
+
+
+def create_new_turn(current_turn, retreat_phase_necessary):
+    if current_turn.phase == 'diplomatic':
+        if retreat_phase_necessary:
+            turn = Turn(year=current_turn.year, season=current_turn.season,
+                        phase='retreat', game=current_turn.game)
+        elif not retreat_phase_necessary and current_turn.season == 'fall':
+            turn = Turn(year=current_turn.year, season=current_turn.season,
+                        phase='reinforcement', game=current_turn.game)
+        else:
+            turn = Turn(year=current_turn.year, season='fall',
+                        phase='diplomatic', game=current_turn.game)
+    turn.save()
+    return turn

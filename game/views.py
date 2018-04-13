@@ -165,6 +165,7 @@ class OrdersList(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, pk, format=None):
+        # TODO: create hold orders for any units that weren't issued orders
         orders = [utils.create_order_from_data(data)
                   for unit_id, data in request.data['orders'].items()]
         convoy_routes = [utils.map_convoy_route_to_models(route)
@@ -186,15 +187,17 @@ class OrdersList(APIView):
                 convoy_routes.append(convoy_route)
         utils.add_supports(locations, supports, conflicts)
         utils.check_for_illegal_swaps(orders, locations, conflicts)
-        pdb.set_trace()
         while len(conflicts) > 0:
             conflict_location = conflicts.pop()
             utils.resolve_conflict(conflict_location, locations, conflicts,
                                    displaced_units)
         utils.update_unit_locations(locations, displaced_units)
-        pdb.set_trace()
-        # TODO: update turn, and return results. But first, let's make
-        # sure we're getting the right outcomes from conflicts.
+
+        game = Game.objects.get(pk=pk)
+        retreat_phase_necessary = len(displaced_units) > 0
+        utils.create_new_turn(game.current_turn(), retreat_phase_necessary)
+        serializer = GameDetailSerializer(game)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, pk, format=None):
         pass

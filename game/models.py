@@ -153,7 +153,8 @@ class Order(models.Model):
     coast = models.CharField(max_length=2, choices=COASTS, blank=True)
     aux_unit = models.ForeignKey(Unit, on_delete=models.CASCADE, blank=True,
                                  null=True, related_name='+', )
-    aux_order_type = models.CharField(max_length=4, choices=AUX_ORDER_TYPES)
+    aux_order_type = models.CharField(max_length=4, choices=AUX_ORDER_TYPES,
+                                      blank=True)
     aux_origin = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                    blank=True, null=True,
                                    related_name='+')

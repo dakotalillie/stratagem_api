@@ -152,6 +152,132 @@ def ex_14(game):
     )
 
 
+def ex_25(game):
+    austria = Country.objects.get(name='Austria', game=game)
+    germany = Country.objects.get(name='Germany', game=game)
+
+    ruh = Territory.objects.get(abbreviation='Ruh', game=game)
+    sil = Territory.objects.get(abbreviation='Sil', game=game)
+    mun = Territory.objects.get(abbreviation='Mun', game=game)
+    boh = Territory.objects.get(abbreviation='Boh', game=game)
+    tyr = Territory.objects.get(abbreviation='Tyr', game=game)
+
+    Unit.objects.create(
+        unit_type='army',
+        country=germany,
+        territory=ruh,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=germany,
+        territory=sil,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=germany,
+        territory=mun,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=austria,
+        territory=boh,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=austria,
+        territory=tyr,
+        game=game
+    )
+
+
+def ex_26(game):
+    england = Country.objects.get(name='England', game=game)
+    russia = Country.objects.get(name='Russia', game=game)
+
+    nth = Territory.objects.get(abbreviation='NTH', game=game)
+    hel = Territory.objects.get(abbreviation='HEL', game=game)
+    den = Territory.objects.get(abbreviation='Den', game=game)
+    ska = Territory.objects.get(abbreviation='SKA', game=game)
+    bal = Territory.objects.get(abbreviation='BAL', game=game)
+    ber = Territory.objects.get(abbreviation='Ber', game=game)
+
+    Unit.objects.create(
+        unit_type='fleet',
+        country=england,
+        territory=nth,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=england,
+        territory=hel,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=england,
+        territory=den,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=russia,
+        territory=ska,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=russia,
+        territory=bal,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=russia,
+        territory=ber,
+        game=game
+    )
+
+
+def ex_28(game):
+    england = Country.objects.get(name='England', game=game)
+    france = Country.objects.get(name='France', game=game)
+
+    lon = Territory.objects.get(abbreviation='Lon', game=game)
+    nth = Territory.objects.get(abbreviation='NTH', game=game)
+    bel = Territory.objects.get(abbreviation='Bel', game=game)
+    eng = Territory.objects.get(abbreviation='ENG', game=game)
+
+    Unit.objects.create(
+        unit_type='army',
+        country=england,
+        territory=lon,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=england,
+        territory=nth,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=france,
+        territory=bel,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=france,
+        territory=eng,
+        game=game
+    )
+
+
 def ex_32(game):
     france = Country.objects.get(name='France', game=game)
     italy = Country.objects.get(name='Italy', game=game)
