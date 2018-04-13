@@ -2,6 +2,7 @@ import json
 
 from django.core.management.base import BaseCommand
 from game.models import Player, Game, Country, Unit, Territory, Turn
+from .utils import seed_scenarios
 
 
 class Command(BaseCommand):
@@ -63,71 +64,7 @@ class Command(BaseCommand):
 
     def _create_units(self, country_data):
         game = Game.objects.first()
-
-        for country_name, data in country_data.items():
-            country = Country.objects.get(name=country_name, game=game)
-            for unit in data['startingUnits']:
-                territory = Territory.objects.get(
-                    abbreviation=unit['territory'],
-                    game=game
-                )
-                Unit.objects.create(
-                    unit_type=unit['type'],
-                    country=country,
-                    territory=territory,
-                    coast=unit['coast'],
-                    game=game
-                )
-
-    def _create_custom_units(self):
-        game = Game.objects.first()
-
-        france = Country.objects.get(name='France', game=game)
-        italy = Country.objects.get(name='Italy', game=game)
-
-        tun = Territory.objects.get(abbreviation='Tun', game=game)
-        tys = Territory.objects.get(abbreviation='TYS', game=game)
-        ion = Territory.objects.get(abbreviation='ION', game=game)
-        rom = Territory.objects.get(abbreviation='Rom', game=game)
-        nap = Territory.objects.get(abbreviation='Nap', game=game)
-        apu = Territory.objects.get(abbreviation='Apu', game=game)
-
-        Unit.objects.create(
-            unit_type='army',
-            country=france,
-            territory=tun,
-            game=game
-        )
-        Unit.objects.create(
-            unit_type='fleet',
-            country=france,
-            territory=tys,
-            game=game
-        )
-        Unit.objects.create(
-            unit_type='fleet',
-            country=france,
-            territory=ion,
-            game=game
-        )
-        Unit.objects.create(
-            unit_type='army',
-            country=france,
-            territory=apu,
-            game=game
-        )
-        Unit.objects.create(
-            unit_type='fleet',
-            country=italy,
-            territory=nap,
-            game=game
-        )
-        Unit.objects.create(
-            unit_type='fleet',
-            country=italy,
-            territory=rom,
-            game=game
-        )
+        seed_scenarios.ex_12(game)
 
     def handle(self, *args, **options):
         with open('game/data/countries.json') as countries_json:
@@ -141,5 +78,4 @@ class Command(BaseCommand):
         self._create_turn()
         self._create_countries(country_data)
         self._create_territories(country_data, territory_data)
-        # self._create_units(country_data)
-        self._create_custom_units()
+        self._create_units(country_data)
