@@ -190,8 +190,7 @@ class OrdersList(APIView):
             conflict_location = conflicts.pop()
             utils.resolve_conflict(conflict_location, locations, conflicts,
                                    displaced_units)
-        # TODO: map units' territories to their new locations.
-        pdb.set_trace()
+        utils.update_unit_locations(locations, displaced_units)
 
     def delete(self, request, pk, format=None):
         pass

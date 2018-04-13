@@ -43,6 +43,8 @@ def create_order_from_data(data):
         aux_destination=aux_destination
     )
 
+    # TODO: save order here.
+
     return order
 
 
@@ -122,17 +124,17 @@ def resolve_conflicts_in_convoy_route(convoy_route, locations,
                     unit = convoy_route['unit']
                     locations[convoy_route['destination']].pop(unit)
                     return_unit_to_origin(unit, locations, conflicts)
-                    # Check if there are other ways destination territory
-                    # is being attacked. If not, remove the destination from
-                    # conflicts
+                    # Check if there are other ways destination
+                    # territory is being attacked. If not, remove
+                    # the destination from conflicts
                     more_attacks = len(locations[
                         convoy_route['destination']
                     ].keys()) > 1
                     if not more_attacks:
                         conflicts.remove(convoy_route['destination'])
 
-                # Since the convoy route is broken, we can consider it resolved
-                # without checking the other units
+                # Since the convoy route is broken, we can consider it
+                # resolved without checking the other units
                 conflicts.remove(defender.territory)
                 return True
             elif outcome == 'defer':
@@ -151,18 +153,18 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
         ]
         # Check to make sure supports haven't been cut.
         for support_order in unit_supports:
-            # This checks whether the only way support could be cut in the
-            # territory the convoyed unit is moving to is by the convoyed unit
-            # itself.
+            # This checks whether the only way support could be cut in
+            # the territory the convoyed unit is moving to is by the
+            # convoyed unit itself.
             if (set(locations[support_order.origin].keys()) == set([
                 support_order.unit,
                 convoy_route['unit']
             ])):
                 # Check if there are other routes with the same
                 # origin and destination. If so, defer, and
-                # sort those out first. Otherwise, with no other routes, the
-                # convoyed until cannot cut support from the territory is is
-                # moving to.
+                # sort those out first. Otherwise, with no other routes,
+                # the convoyed until cannot cut support from the
+                # territory is is moving to.
                 if other_routes:
                     return 'defer', None
                 else:
@@ -188,7 +190,8 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
 
 def add_supports(locations, supports):
     for order in supports:
-        # Check to make sure the supported action is actually being performed.
+        # Check to make sure the supported action is actually being
+        # performed.
         if (not locations.get(order.aux_destination) or
                 order.aux_unit not in locations[order.aux_destination]):
             continue
@@ -234,3 +237,18 @@ def return_unit_to_origin(unit, locations, conflicts):
     else:
         locations[unit.territory][unit] = 1
         conflicts.add(unit.territory)
+
+
+def update_unit_locations(locations, displaced_units):
+    # Handle displaced units.
+    for unit in displaced_units:
+        unit.retreating_from = unit.territory
+        unit.territory = None
+        # TODO: save unit here.
+    # Map units' territories to their new locations.
+    for territory, unit_dict in locations.items():
+        # Since at this point the unit dictionary will have only one
+        # entry, the run time of this is not as bad as it looks.
+        for unit in unit_dict:
+            unit.territory = territory
+            # TODO: save unit here.
