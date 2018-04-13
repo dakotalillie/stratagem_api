@@ -181,6 +181,7 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
     # Determine the result. First, we need the maximum strength
     # in this contest. Then, we need to determine if more than
     # one unit has that strength. if so, it's a standoff.
+    # TODO: potentially refactor this into determine_conflict_outcome
     max_unit = max(units_in_terr, key=units_in_terr.get)
     max_strength = units_in_terr[max_unit]
     standoff = False
@@ -208,18 +209,21 @@ def add_supports(locations, supports, conflicts):
 def check_for_illegal_swaps(orders, locations, conflicts):
     for order in orders:
         # TODO: There has to be a more efficient way to do this.
-        other_order = [other_order for other_order in orders
-                       if other_order.destination == order.origin and
-                       order.destination == other_order.origin]
-        if other_order:
+        matched_order = None
+        for other_order in orders:
+            if (other_order.destination == order.origin and
+                    order.destination == other_order.origin and
+                    order.id != other_order.id):
+                matched_order = other_order
+        if matched_order:
             unit_strength = locations[order.destination][order.unit]
             other_unit_strength = locations[
-                other_order.destination][other_order.unit]
+                matched_order.destination][matched_order.unit]
             equal_strength = unit_strength == other_unit_strength
             if equal_strength and not (order.via_convoy or
-                                       other_order.via_convoy):
+                                       matched_order.via_convoy):
                 return_unit_to_origin(order.unit, locations, conflicts)
-                return_unit_to_origin(other_order.unit, locations, conflicts)
+                return_unit_to_origin(matched_order.unit, locations, conflicts)
 
 
 def resolve_conflict(conflict_location, locations, conflicts, displaced_units):
@@ -251,12 +255,19 @@ def determine_conflict_outcome(defender, units_in_terr, locations, conflicts):
 def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
                                      locations, conflicts, displaced_units):
     units_to_move = [unit for unit in units_in_terr if unit != winner]
+
     for unit in units_to_move:
-        units_in_terr.pop(unit)
-        if unit.territory == conflict_location:
-            displaced_units.append(unit)
+        # Cannot displace own unit.
+        if (unit.territory == conflict_location and unit.country ==
+                winner.country):
+            units_in_terr.pop(winner)
+            return_unit_to_origin(winner, locations, conflicts)
         else:
-            return_unit_to_origin(unit, locations, conflicts)
+            units_in_terr.pop(unit)
+            if (unit.territory == conflict_location):
+                displaced_units.append(unit)
+            else:
+                return_unit_to_origin(unit, locations, conflicts)
 
 
 def return_unit_to_origin(unit, locations, conflicts):
