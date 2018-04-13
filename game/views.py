@@ -192,5 +192,8 @@ class OrdersList(APIView):
                                    displaced_units)
         utils.update_unit_locations(locations, displaced_units)
 
+        # TODO: update turn, and return results. But first, let's make
+        # sure we're getting the right outcomes from conflicts.
+
     def delete(self, request, pk, format=None):
         pass
