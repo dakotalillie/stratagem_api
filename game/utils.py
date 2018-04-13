@@ -216,14 +216,23 @@ def check_for_illegal_swaps(orders, locations, conflicts):
                     order.id != other_order.id):
                 matched_order = other_order
         if matched_order:
-            unit_strength = locations[order.destination][order.unit]
-            other_unit_strength = locations[
-                matched_order.destination][matched_order.unit]
-            equal_strength = unit_strength == other_unit_strength
-            if equal_strength and not (order.via_convoy or
-                                       matched_order.via_convoy):
-                return_unit_to_origin(order.unit, locations, conflicts)
-                return_unit_to_origin(matched_order.unit, locations, conflicts)
+            unit_in_location = order.unit in locations[order.destination]
+            matched_unit_in_location = (matched_order.unit in
+                                        locations[matched_order.destination])
+            # Check if matter hasn't already resolved
+            if unit_in_location and matched_unit_in_location:
+                unit_strength = locations[order.destination][order.unit]
+                other_unit_strength = locations[
+                    matched_order.destination][matched_order.unit]
+                if not (order.via_convoy or matched_order.via_convoy):
+                    if unit_strength >= other_unit_strength:
+                        locations[matched_order.destination].pop(
+                            matched_order.unit)
+                        return_unit_to_origin(
+                            matched_order.unit, locations, conflicts)
+                    if unit_strength <= other_unit_strength:
+                        locations[order.destination].pop(order.unit)
+                        return_unit_to_origin(order.unit, locations, conflicts)
 
 
 def resolve_conflict(conflict_location, locations, conflicts, displaced_units):

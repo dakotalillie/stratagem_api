@@ -186,6 +186,7 @@ class OrdersList(APIView):
                 convoy_routes.append(convoy_route)
         utils.add_supports(locations, supports, conflicts)
         utils.check_for_illegal_swaps(orders, locations, conflicts)
+        pdb.set_trace()
         while len(conflicts) > 0:
             conflict_location = conflicts.pop()
             utils.resolve_conflict(conflict_location, locations, conflicts,

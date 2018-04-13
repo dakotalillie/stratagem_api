@@ -18,6 +18,41 @@ def standard(game, country_data):
             )
 
 
+def test_convoys(game):
+    england = Country.objects.get(name='England', game=game)
+    france = Country.objects.get(name='France', game=game)
+
+    lvp = Territory.objects.get(abbreviation='Lvp', game=game)
+    mar = Territory.objects.get(abbreviation='Mar', game=game)
+    iri = Territory.objects.get(abbreviation='IRI', game=game)
+    mao = Territory.objects.get(abbreviation='MAO', game=game)
+
+    Unit.objects.create(
+        unit_type='army',
+        country=england,
+        territory=lvp,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=england,
+        territory=iri,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=england,
+        territory=mao,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=france,
+        territory=mar,
+        game=game
+    )
+
+
 def ex_12(game):
     austria = Country.objects.get(name='Austria', game=game)
     germany = Country.objects.get(name='Germany', game=game)
@@ -64,6 +99,55 @@ def ex_12(game):
         unit_type='army',
         country=russia,
         territory=war,
+        game=game
+    )
+
+
+def ex_14(game):
+    russia = Country.objects.get(name='Russia', game=game)
+    turkey = Country.objects.get(name='Turkey', game=game)
+
+    sev = Territory.objects.get(abbreviation='Sev', game=game)
+    rum = Territory.objects.get(abbreviation='Rum', game=game)
+    ser = Territory.objects.get(abbreviation='Ser', game=game)
+    gre = Territory.objects.get(abbreviation='Gre', game=game)
+    bul = Territory.objects.get(abbreviation='Bul', game=game)
+    bla = Territory.objects.get(abbreviation='BLA', game=game)
+
+    Unit.objects.create(
+        unit_type='army',
+        country=russia,
+        territory=sev,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=russia,
+        territory=rum,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=russia,
+        territory=ser,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=russia,
+        territory=gre,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=turkey,
+        territory=bul,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=turkey,
+        territory=bla,
         game=game
     )
 
