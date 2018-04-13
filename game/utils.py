@@ -40,7 +40,8 @@ def create_order_from_data(data):
         aux_unit=aux_unit,
         aux_order_type=aux_order_type,
         aux_origin=aux_origin,
-        aux_destination=aux_destination
+        aux_destination=aux_destination,
+        via_convoy=data.get('via_convoy')
     )
 
     # TODO: save order here.
@@ -202,6 +203,23 @@ def add_supports(locations, supports, conflicts):
         # Check to make sure support isn't being cut
         if order.origin not in conflicts:
             locations[order.aux_destination][order.aux_unit] += 1
+
+
+def check_for_illegal_swaps(orders, locations, conflicts):
+    for order in orders:
+        # TODO: There has to be a more efficient way to do this.
+        other_order = [other_order for other_order in orders
+                       if other_order.destination == order.origin and
+                       order.destination == other_order.origin]
+        if other_order:
+            unit_strength = locations[order.destination][order.unit]
+            other_unit_strength = locations[
+                other_order.destination][other_order.unit]
+            equal_strength = unit_strength == other_unit_strength
+            if equal_strength and not (order.via_convoy or
+                                       other_order.via_convoy):
+                return_unit_to_origin(order.unit, locations, conflicts)
+                return_unit_to_origin(other_order.unit, locations, conflicts)
 
 
 def resolve_conflict(conflict_location, locations, conflicts, displaced_units):
