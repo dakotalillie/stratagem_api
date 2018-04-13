@@ -10,9 +10,7 @@ from game.models import Game, Country, Territory, Unit, Turn, Order
 from game.serializers import UserSerializer, GameDetailSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-from game.utils import create_order_from_data
-from game.utils import map_convoy_route_to_models
-from game.utils import more_possible_convoy_routes
+from . import utils
 
 
 # this all isn't necessary currently but will become useful again with
@@ -167,137 +165,33 @@ class OrdersList(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, pk, format=None):
-        orders = [create_order_from_data(data)
+        orders = [utils.create_order_from_data(data)
                   for unit_id, data in request.data['orders'].items()]
-        convoy_routes = [map_convoy_route_to_models(route)
+        convoy_routes = [utils.map_convoy_route_to_models(route)
                          for route in request.data['convoy_routes']]
-        supports = []
-        conflicts = set([])
-        locations = {}
+        locations, supports, conflicts = utils.map_orders_to_locations(orders)
         displaced_units = []
-
-        for order in orders:
-            # CASE: no moves recorded for this territory yet
-            if order.destination not in locations:
-                locations[order.destination] = {order.unit: 1}
-            # CASE: other unit(s) attempting to occupy territory
-            else:
-                locations[order.destination][order.unit] = 1
-                conflicts.add(order.destination)
-            # Hold on to to supports, so we can factor them in later.
-            if order.order_type == 'support':
-                supports.append(order)
-
         # Convoy routes need to be resolved first, because if there's a unit
         # providing support in the territory that the convoyed unit is moving
         # to, that support could be cut.
-        for convoy_route in convoy_routes:
-            for convoyeur in convoy_route['route']:
-                if convoyeur.territory in conflicts:
-                    # This flag is necessary in case we have to check whether
-                    # other valid convoy routes exist in order to determine
-                    # supports and thus, the outcome of this conflict
-                    defer_validation = False
-                    units_in_convoyeur_terr = locations[convoyeur.territory]
-                    for unit in units_in_convoyeur_terr:
-                        # Find all supports for that unit.
-                        unit_supports = [
-                            order for order in supports
-                            if order.aux_unit == unit
-                        ]
-                        # Check to make sure supports haven't been cut,
-                        # including checking to make sure support isn't being
-                        # cut from the convoy origin.
-                        for support_order in unit_supports:
-                            if ([*locations[support_order.origin].keys()] == [
-                                support_order.unit,
-                                convoy_route['unit']
-                            ]):
+        while len(convoy_routes) > 0:
+            convoy_route = convoy_routes.pop(0)
+            other_routes = utils.more_possible_convoy_routes(convoy_routes,
+                                                             convoy_route)
+            resolved = utils.resolve_conflicts_in_convoy_route(
+                convoy_route, locations, supports, conflicts, displaced_units,
+                other_routes
+            )
+            if not resolved:
+                convoy_routes.append(convoy_route)
 
-                                # Check if there are other routes with the same
-                                # origin and destination. If so, defer, and
-                                # sort those out first.
-                                if more_possible_convoy_routes(
-                                    convoy_routes, convoy_route
-                                ):
-                                    defer_validation = True
-                                    break
-                                else:
-                                    units_in_convoyeur_terr[unit] += 1
-                                    supports.remove(support_order)
-                            if support_order.origin not in conflicts:
-                                units_in_convoyeur_terr[unit] += 1
-                                supports.remove(support_order)
-                    if defer_validation:
-                        break
-                    # Determine the result. First, we need the maximum strength
-                    # in this contest. Then, we need to determine if more than
-                    # one unit has that strength. if so, it's a standoff.
-                    max_unit = max(units_in_convoyeur_terr,
-                                   key=units_in_convoyeur_terr.get)
-                    max_strength = units_in_convoyeur_terr[max_unit]
-                    standoff = False
-                    for unit, strength in units_in_convoyeur_terr.items():
-                        if strength == max_strength and unit is not max_unit:
-                            standoff = True
-                    # CASE 1: Defender wins. Attackers are shifted back to
-                    # their original territories and the convoy continues.
-                    if standoff or max_unit is convoyeur:
-                        units_to_move = [unit for unit
-                                         in units_in_convoyeur_terr
-                                         if unit is not convoyeur]
-                        for unit in units_to_move:
-                            units_in_convoyeur_terr.pop(unit)
-                            if unit.territory not in locations:
-                                locations[unit.territory] = {unit: 1}
-                            else:
-                                locations[unit.territory][unit] = 1
-                                conflicts.add(unit.territory)
-                    # CASE 2: Attacker wins. The convoy is displaced and the
-                    # convoyed unit has to look for alternate routes. If none
-                    # are found, the convoyed unit remains in their original
-                    # territory.
-                    else:
-                        displaced_units.append(convoyeur)
-                        units_in_convoyeur_terr.pop(convoyeur)
-                        units_to_move = [unit for unit
-                                         in units_in_convoyeur_terr
-                                         if unit is not max_unit]
-                        for unit in units_to_move:
-                            units_in_convoyeur_terr.pop(unit)
-                            if unit.territory not in locations:
-                                locations[unit.territory] = {unit: 1}
-                            else:
-                                locations[unit.territory][unit] = 1
-                                conflicts.add(unit.territory)
-                        if not more_possible_convoy_routes(
-                            convoy_routes, convoy_route
-                        ):
-                            unit = convoy_route['unit']
-                            locations[convoy_route['destination']].pop(unit)
-                            if unit.territory not in locations:
-                                locations[unit.territory] = {unit: 1}
-                            else:
-                                locations[unit.territory][unit] = 1
-                                conflicts.add(unit.territory)
+        utils.add_supports(locations, supports)
+        while len(conflicts) > 0:
+            conflict_location = conflicts.pop()
+            utils.resolve_conflict(conflict_location, locations, conflicts,
+                                   displaced_units)
+
         pdb.set_trace()
-
-        # Now in the second iteration, we determine supports.
-        for order in orders:
-            if order.order_type == 'support':
-                # Check to make sure the supported action is actually being
-                # performed.
-                if (not locations.get(order.aux_destination) or
-                        order.aux_unit not in
-                        locations[order.aux_destination]):
-                    continue
-                # Check to make sure support isn't being cut
-                if order.destination not in locations:
-                    locations[order.destination] = {order.unit: 1}
-                    locations[order.aux_destination][order.aux_unit] += 1
-                else:
-                    locations[order.destination][order.unit] = 1
-                    conflicts.add(order.destination)
 
     def delete(self, request, pk, format=None):
         pass
