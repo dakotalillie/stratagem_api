@@ -69,7 +69,7 @@ def more_possible_convoy_routes(convoy_routes, route):
     count = len([cr for cr in convoy_routes
                  if cr['origin'] == route['origin'] and
                  cr['destination'] == route['destination']])
-    if count > 1:
+    if count > 0:
         return True
     return False
 
@@ -139,6 +139,10 @@ def resolve_conflicts_in_convoy_route(convoy_route, locations,
                 return True
             elif outcome == 'defer':
                 return False
+    # Convoy was successful. Remove supports from destination if necessary.
+    new_supports = [order for order in supports
+                    if order.origin != convoy_route['destination']]
+    supports[:] = new_supports
     return True
 
 
@@ -202,27 +206,33 @@ def add_supports(locations, supports):
 
 def resolve_conflict(conflict_location, locations, conflicts, displaced_units):
     units_in_terr = locations[conflict_location]
-    winner = determine_conflict_outcome(units_in_terr, locations, conflicts)
+    defender = None
+    for unit in units_in_terr:
+        if unit.territory == conflict_location:
+            defender = unit
+            break
+    winner = determine_conflict_outcome(defender, units_in_terr, locations,
+                                        conflicts)
     return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
                                      locations, conflicts, displaced_units)
 
 
-def determine_conflict_outcome(units_in_terr, locations, conflicts):
+def determine_conflict_outcome(defender, units_in_terr, locations, conflicts):
     max_unit = max(units_in_terr, key=units_in_terr.get)
     max_strength = units_in_terr[max_unit]
     standoff = False
     for unit, strength in units_in_terr.items():
-        if strength == max_strength and unit is not max_unit:
+        if strength == max_strength and unit != max_unit:
             standoff = True
     if standoff:
-        return None
+        return defender if defender else None
     else:
         return max_unit
 
 
 def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
                                      locations, conflicts, displaced_units):
-    units_to_move = [unit for unit in units_in_terr if unit is not winner]
+    units_to_move = [unit for unit in units_in_terr if unit != winner]
     for unit in units_to_move:
         units_in_terr.pop(unit)
         if unit.territory == conflict_location:

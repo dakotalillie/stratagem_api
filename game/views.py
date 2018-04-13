@@ -184,14 +184,13 @@ class OrdersList(APIView):
             )
             if not resolved:
                 convoy_routes.append(convoy_route)
-
         utils.add_supports(locations, supports)
         while len(conflicts) > 0:
             conflict_location = conflicts.pop()
             utils.resolve_conflict(conflict_location, locations, conflicts,
                                    displaced_units)
         utils.update_unit_locations(locations, displaced_units)
-
+        pdb.set_trace()
         # TODO: update turn, and return results. But first, let's make
         # sure we're getting the right outcomes from conflicts.
 
