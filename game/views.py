@@ -184,7 +184,7 @@ class OrdersList(APIView):
             )
             if not resolved:
                 convoy_routes.append(convoy_route)
-        utils.add_supports(locations, supports)
+        utils.add_supports(locations, supports, conflicts)
         while len(conflicts) > 0:
             conflict_location = conflicts.pop()
             utils.resolve_conflict(conflict_location, locations, conflicts,

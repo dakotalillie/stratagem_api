@@ -184,15 +184,15 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
     max_strength = units_in_terr[max_unit]
     standoff = False
     for unit, strength in units_in_terr.items():
-        if strength == max_strength and unit is not max_unit:
+        if strength == max_strength and unit != max_unit:
             standoff = True
-    if standoff or max_unit is defender:
+    if standoff or max_unit == defender:
         return 'defender wins', defender
     else:
         return 'defender loses', max_unit
 
 
-def add_supports(locations, supports):
+def add_supports(locations, supports, conflicts):
     for order in supports:
         # Check to make sure the supported action is actually being
         # performed.
