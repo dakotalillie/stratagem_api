@@ -165,9 +165,10 @@ class OrdersList(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, pk, format=None):
-        # TODO: create hold orders for any units that weren't issued orders
+        game = Game.objects.get(pk=pk)
         orders = [utils.create_order_from_data(data)
                   for unit_id, data in request.data['orders'].items()]
+        utils.create_missing_hold_orders(game, orders)
         convoy_routes = [utils.map_convoy_route_to_models(route)
                          for route in request.data['convoy_routes']]
         locations, supports, conflicts = utils.map_orders_to_locations(orders)
@@ -192,8 +193,6 @@ class OrdersList(APIView):
             utils.resolve_conflict(conflict_location, locations, conflicts,
                                    displaced_units)
         utils.update_unit_locations(locations, displaced_units)
-
-        game = Game.objects.get(pk=pk)
         retreat_phase_necessary = len(displaced_units) > 0
         utils.create_new_turn(game.current_turn(), retreat_phase_necessary)
         serializer = GameDetailSerializer(game)

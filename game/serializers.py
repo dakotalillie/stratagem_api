@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Player, Game, Country, Territory, Unit
+from .models import Player, Game, Turn, Country, Territory, Unit
 
 
 class GameOverviewSerializer(serializers.ModelSerializer):
@@ -48,10 +48,21 @@ class CountrySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'territories', 'units')
 
 
+class TurnSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Turn
+        fields = ('season', 'year', 'phase')
+
+
 class GameDetailSerializer(serializers.ModelSerializer):
 
     countries = CountrySerializer(many=True)
+    current_turn = serializers.SerializerMethodField()
+
+    def get_current_turn(self, obj):
+        return TurnSerializer(obj.current_turn()).data
 
     class Meta:
         model = Game
-        fields = ('id', 'title', 'countries')
+        fields = ('id', 'title', 'countries', 'current_turn')

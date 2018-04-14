@@ -53,6 +53,22 @@ def create_order_from_data(data):
     return order
 
 
+def create_missing_hold_orders(game, orders):
+    game_units = set(game.units.all())
+    for order in orders:
+        game_units.remove(order.unit)
+    for unit in game_units:
+        order = Order.objects.create(
+            turn=game.current_turn(),
+            unit=unit,
+            order_type='hold',
+            origin=unit.territory,
+            destination=unit.territory,
+            coast=unit.coast
+        )
+        orders.append(order)
+
+
 def map_convoy_route_to_models(data):
     mapped_data = {}
     mapped_data['unit'] = Unit.objects.get(pk=data['unit_id'])

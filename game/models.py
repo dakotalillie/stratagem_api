@@ -162,4 +162,4 @@ class Order(models.Model):
                                         blank=True, null=True,
                                         related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
-    via_convoy = models.BooleanField(blank=True)
+    via_convoy = models.BooleanField(default=False)
