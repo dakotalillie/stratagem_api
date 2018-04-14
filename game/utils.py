@@ -89,7 +89,7 @@ def create_reinforcement_order_from_data(data, game):
 
 
 def create_missing_hold_orders(game, orders):
-    game_units = set(game.units.all())
+    game_units = set(game.units.filter(active=True))
     for order in orders:
         game_units.remove(order.unit)
     for unit in game_units:
@@ -388,7 +388,7 @@ def create_new_turn(current_turn, retreat_phase_necessary):
 
 
 def update_territory_owners(game):
-    for unit in game.units.all():
+    for unit in game.units.filter(active=True):
         if unit.country != unit.territory.owner:
             unit.territory.owner = unit.country
             unit.territory.save()

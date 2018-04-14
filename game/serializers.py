@@ -45,16 +45,24 @@ class CountrySerializer(serializers.ModelSerializer):
 
     territories = TerritorySerializer(many=True, read_only=True)
     units = serializers.SerializerMethodField()
+    retreating_units = serializers.SerializerMethodField()
 
     def get_units(self, obj):
         if len(obj.units.all()) > 0:
-            units = obj.units.filter(active=True)
+            units = obj.units.filter(active=True, retreating_from=None)
+            return UnitSerializer(units, many=True, read_only=True).data
+        return []
+
+    def get_retreating_units(self, obj):
+        if len(obj.units.all()) > 0:
+            units = obj.units.filter(active=True, territory=None)
             return UnitSerializer(units, many=True, read_only=True).data
         return []
 
     class Meta:
         model = Country
-        fields = ('id', 'user', 'name', 'territories', 'units')
+        fields = ('id', 'user', 'name', 'territories', 'units',
+                  'retreating_units')
 
 
 class TurnSerializer(serializers.ModelSerializer):
