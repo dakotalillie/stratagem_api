@@ -303,7 +303,7 @@ def return_unit_to_origin(unit, locations, conflicts):
         conflicts.add(unit.territory)
 
 
-def update_unit_locations(locations, displaced_units):
+def update_unit_locations(locations, displaced_units, orders):
     # Handle displaced units.
     for unit in displaced_units:
         unit.retreating_from = unit.territory
@@ -314,7 +314,16 @@ def update_unit_locations(locations, displaced_units):
         # Since at this point the unit dictionary will have only one
         # entry, the run time of this is not as bad as it looks.
         for unit in unit_dict:
+            # TODO: this is a temporary fix. restructure data later.
+            coast = unit.coast
+            for order in orders:
+                if order.unit == unit and order.destination == territory:
+                    coast = order.coast
+                    break
+                elif order.unit == unit:
+                    break
             unit.territory = territory
+            unit.coast = coast
             unit.save()
 
 
@@ -324,10 +333,27 @@ def create_new_turn(current_turn, retreat_phase_necessary):
             turn = Turn(year=current_turn.year, season=current_turn.season,
                         phase='retreat', game=current_turn.game)
         elif not retreat_phase_necessary and current_turn.season == 'fall':
-            turn = Turn(year=current_turn.year, season=current_turn.season,
+            turn = Turn(year=current_turn.year, season='fall',
                         phase='reinforcement', game=current_turn.game)
         else:
             turn = Turn(year=current_turn.year, season='fall',
                         phase='diplomatic', game=current_turn.game)
+    elif current_turn.phase == 'retreat':
+        if current_turn.season == 'fall':
+            turn = Turn(year=current_turn.year, season='fall',
+                        phase='reinforcement', game=current_turn.game)
+        else:
+            turn = Turn(year=current_turn.year, season='fall',
+                        phase='diplomatic', game=current_turn.game)
+    elif current_turn.phase == 'reinforcement':
+        turn = Turn(year=current_turn.year + 1, season='spring',
+                    phase='diplomatic', game=current_turn.game)
     turn.save()
     return turn
+
+
+def update_territory_owners(game):
+    for unit in game.units.all():
+        if unit.country != unit.territory.owner:
+            unit.territory.owner = unit.country
+            unit.territory.save()

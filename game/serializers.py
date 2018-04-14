@@ -35,7 +35,8 @@ class UnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unit
-        fields = ('id', 'unit_type', 'coast', 'territory', 'country')
+        fields = ('id', 'unit_type', 'coast', 'territory', 'country',
+                  'retreating_from')
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -45,7 +46,7 @@ class CountrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Country
-        fields = ('id', 'name', 'territories', 'units')
+        fields = ('id', 'user', 'name', 'territories', 'units')
 
 
 class TurnSerializer(serializers.ModelSerializer):

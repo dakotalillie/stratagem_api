@@ -192,9 +192,12 @@ class OrdersList(APIView):
             conflict_location = conflicts.pop()
             utils.resolve_conflict(conflict_location, locations, conflicts,
                                    displaced_units)
-        utils.update_unit_locations(locations, displaced_units)
+
+        utils.update_unit_locations(locations, displaced_units, orders)
         retreat_phase_necessary = len(displaced_units) > 0
         utils.create_new_turn(game.current_turn(), retreat_phase_necessary)
+        if game.current_turn().phase == 'reinforcement':
+            utils.update_territory_owners(game)
         serializer = GameDetailSerializer(game)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
