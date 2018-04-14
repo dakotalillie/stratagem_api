@@ -1,3 +1,5 @@
+import pdb
+
 from rest_framework import serializers
 from .models import Player, Game, Turn, Country, Territory, Unit
 
@@ -42,7 +44,13 @@ class UnitSerializer(serializers.ModelSerializer):
 class CountrySerializer(serializers.ModelSerializer):
 
     territories = TerritorySerializer(many=True, read_only=True)
-    units = UnitSerializer(many=True, read_only=True)
+    units = serializers.SerializerMethodField()
+
+    def get_units(self, obj):
+        if len(obj.units.all()) > 0:
+            units = obj.units.filter(active=True)
+            return UnitSerializer(units, many=True, read_only=True).data
+        return []
 
     class Meta:
         model = Country

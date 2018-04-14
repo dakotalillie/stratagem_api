@@ -53,6 +53,47 @@ def test_convoys(game):
     )
 
 
+def test_unit_deletion(game):
+    germany = Country.objects.get(name='Germany', game=game)
+
+    ber = Territory.objects.get(abbreviation='Ber', game=game)
+    mun = Territory.objects.get(abbreviation='Mun', game=game)
+    pru = Territory.objects.get(abbreviation='Pru', game=game)
+    ruh = Territory.objects.get(abbreviation='Ruh', game=game)
+    kie = Territory.objects.get(abbreviation='Kie', game=game)
+
+    Unit.objects.create(
+        unit_type='army',
+        country=germany,
+        territory=ber,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=germany,
+        territory=mun,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=germany,
+        territory=pru,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='army',
+        country=germany,
+        territory=ruh,
+        game=game
+    )
+    Unit.objects.create(
+        unit_type='fleet',
+        country=germany,
+        territory=kie,
+        game=game
+    )
+
+
 def ex_12(game):
     austria = Country.objects.get(name='Austria', game=game)
     germany = Country.objects.get(name='Germany', game=game)

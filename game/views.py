@@ -166,36 +166,43 @@ class OrdersList(APIView):
 
     def post(self, request, pk, format=None):
         game = Game.objects.get(pk=pk)
-        orders = [utils.create_order_from_data(data)
-                  for unit_id, data in request.data['orders'].items()]
-        utils.create_missing_hold_orders(game, orders)
-        convoy_routes = [utils.map_convoy_route_to_models(route)
-                         for route in request.data['convoy_routes']]
-        locations, supports, conflicts = utils.map_orders_to_locations(orders)
-        displaced_units = []
-        # Convoy routes need to be resolved first, because if there's a unit
-        # providing support in the territory that the convoyed unit is moving
-        # to, that support could be cut.
-        while len(convoy_routes) > 0:
-            convoy_route = convoy_routes.pop(0)
-            other_routes = utils.more_possible_convoy_routes(convoy_routes,
-                                                             convoy_route)
-            resolved = utils.resolve_conflicts_in_convoy_route(
-                convoy_route, locations, supports, conflicts, displaced_units,
-                other_routes
-            )
-            if not resolved:
-                convoy_routes.append(convoy_route)
-        utils.add_supports(locations, supports, conflicts)
-        utils.check_for_illegal_swaps(orders, locations, conflicts)
-        while len(conflicts) > 0:
-            conflict_location = conflicts.pop()
-            utils.resolve_conflict(conflict_location, locations, conflicts,
-                                   displaced_units)
+        if game.current_turn().phase == 'diplomatic':
+            orders = [utils.create_order_from_data(data)
+                      for unit_id, data in request.data['orders'].items()]
+            utils.create_missing_hold_orders(game, orders)
+            convoy_routes = [utils.map_convoy_route_to_models(route)
+                             for route in request.data['convoy_routes']]
+            locations, supports, conflicts = utils.map_orders_to_locations(
+                orders)
+            displaced_units = []
+            # Convoy routes need to be resolved first, because if
+            # there's a unit providing support in the territory that the
+            # convoyed unit is moving to, that support could be cut.
+            while len(convoy_routes) > 0:
+                convoy_route = convoy_routes.pop(0)
+                other_routes = utils.more_possible_convoy_routes(convoy_routes,
+                                                                 convoy_route)
+                resolved = utils.resolve_conflicts_in_convoy_route(
+                    convoy_route, locations, supports, conflicts,
+                    displaced_units, other_routes
+                )
+                if not resolved:
+                    convoy_routes.append(convoy_route)
+            utils.add_supports(locations, supports, conflicts)
+            utils.check_for_illegal_swaps(orders, locations, conflicts)
+            while len(conflicts) > 0:
+                conflict_location = conflicts.pop()
+                utils.resolve_conflict(conflict_location, locations, conflicts,
+                                       displaced_units)
 
-        utils.update_unit_locations(locations, displaced_units, orders)
-        retreat_phase_necessary = len(displaced_units) > 0
-        utils.create_new_turn(game.current_turn(), retreat_phase_necessary)
+            utils.update_unit_locations(locations, displaced_units, orders)
+            retreat_phase_necessary = len(displaced_units) > 0
+        elif game.current_turn().phase == 'reinforcement':
+            for territory, order_data in request.data['orders'].items():
+                utils.create_reinforcement_order_from_data(order_data, game)
+        # CREATE NEW CURRENT TURN
+        utils.create_new_turn(game.current_turn(),
+                              retreat_phase_necessary=False)
         if game.current_turn().phase == 'reinforcement':
             utils.update_territory_owners(game)
         serializer = GameDetailSerializer(game)
