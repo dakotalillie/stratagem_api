@@ -1,4 +1,5 @@
 import pdb
+import json
 from game.models import Game, Country, Territory, Unit, Turn, Order
 
 
@@ -141,6 +142,23 @@ def create_missing_hold_orders(game, orders):
             coast=unit.coast
         )
         orders.append(order)
+
+
+def create_missing_delete_orders(game, orders):
+    game_units = set(game.units.filter(territory=None, active=True))
+    for order in orders:
+        game_units.remove(order.unit)
+    for unit in game_units:
+        Order.objects.create(
+            turn=game.current_turn(),
+            unit=unit,
+            order_type='delete',
+            origin=unit.retreating_from
+        )
+
+        unit.active = False
+        unit.retreating_from = None
+        unit.save()
 
 
 def map_convoy_route_to_models(data):
@@ -465,7 +483,13 @@ def create_new_turn(current_turn, retreat_phase_necessary):
 
 
 def update_territory_owners(game):
+    with open('game/data/territories.json') as territories_json:
+        territory_data = json.loads(territories_json.read())
+
     for unit in game.units.filter(active=True):
-        if unit.country != unit.territory.owner:
+        water_terr = territory_data[
+            unit.territory.abbreviation
+        ]['type'] == 'water'
+        if unit.country != unit.territory.owner and not water_terr:
             unit.territory.owner = unit.country
             unit.territory.save()

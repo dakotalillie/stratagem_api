@@ -201,6 +201,7 @@ class OrdersList(APIView):
         elif game.current_turn().phase == 'retreat':
             orders = [utils.create_retreat_order_from_data(data, game)
                       for unit_id, data in request.data['orders'].items()]
+            utils.create_missing_delete_orders(game, orders)
             locations = utils.handle_retreat_conflicts(orders)
             utils.update_retreat_unit_locations(locations, orders)
         elif game.current_turn().phase == 'reinforcement':
