@@ -88,6 +88,9 @@ class Unit(models.Model):
     retreating_from = models.OneToOneField(Territory, on_delete=models.CASCADE,
                                            blank=True, null=True,
                                            related_name='retreating_unit')
+    invaded_from = models.OneToOneField(Territory, on_delete=models.CASCADE,
+                                        blank=True, null=True,
+                                        related_name='+')
     active = models.BooleanField(default=True)
     unit_type = models.CharField(max_length=5, choices=UNIT_TYPES)
     country = models.ForeignKey(Country, on_delete=models.CASCADE,
@@ -128,7 +131,6 @@ class Order(models.Model):
         ('move', 'move'),
         ('support', 'support'),
         ('convoy', 'convoy'),
-        ('disband', 'disband'),
         ('create', 'create')
     )
     AUX_ORDER_TYPES = (

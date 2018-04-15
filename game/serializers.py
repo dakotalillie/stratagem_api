@@ -34,12 +34,13 @@ class UnitSerializer(serializers.ModelSerializer):
 
     territory = serializers.StringRelatedField(read_only=True)
     retreating_from = serializers.StringRelatedField(read_only=True)
+    invaded_from = serializers.StringRelatedField(read_only=True)
     country = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Unit
         fields = ('id', 'unit_type', 'coast', 'territory', 'country',
-                  'retreating_from')
+                  'retreating_from', 'invaded_from')
 
 
 class CountrySerializer(serializers.ModelSerializer):

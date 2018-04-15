@@ -118,6 +118,7 @@ def create_retreat_order_from_data(data, game):
         unit = Unit.objects.get(pk=data['unit_id'])
         unit.active = False
         unit.retreating_from = None
+        unit.invaded_from = None
         unit.save()
 
         Order.objects.create(
@@ -158,6 +159,7 @@ def create_missing_delete_orders(game, orders):
 
         unit.active = False
         unit.retreating_from = None
+        unit.invaded_from = None
         unit.save()
 
 
@@ -219,6 +221,7 @@ def handle_retreat_conflicts(orders):
         for unit in locations[conflict_location]:
             unit.active = False
             unit.retreating_from = None
+            unit.invaded_from = None
             unit.save()
         locations.pop(conflict_location)
 
@@ -402,6 +405,7 @@ def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
         else:
             units_in_terr.pop(unit)
             if (unit.territory == conflict_location):
+                unit.invaded_from = winner.territory
                 displaced_units.append(unit)
             else:
                 return_unit_to_origin(unit, locations, conflicts)
@@ -454,6 +458,7 @@ def update_retreat_unit_locations(locations, orders):
         unit.territory = territory
         unit.coast = coast
         unit.retreating_from = None
+        unit.invaded_from = None
         unit.save()
 
 
