@@ -111,8 +111,6 @@ def create_retreat_order_from_data(data, game):
             coast=data['coast'],
         )
 
-        return order
-
     elif data['order_type'] == 'delete':
         territory = game.territories.get(abbreviation=data['territory'])
         unit = Unit.objects.get(pk=data['unit_id'])
@@ -121,12 +119,14 @@ def create_retreat_order_from_data(data, game):
         unit.invaded_from = None
         unit.save()
 
-        Order.objects.create(
+        order = Order.objects.create(
             turn=game.current_turn(),
             unit=unit,
             order_type='delete',
             origin=territory
         )
+
+    return order
 
 
 def create_missing_hold_orders(game, orders):
@@ -148,7 +148,7 @@ def create_missing_hold_orders(game, orders):
 def create_missing_delete_orders(game, orders):
     game_units = set(game.units.filter(territory=None, active=True))
     for order in orders:
-        game_units.remove(order.unit)
+        game_units.discard(order.unit)
     for unit in game_units:
         Order.objects.create(
             turn=game.current_turn(),
