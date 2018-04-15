@@ -1,0 +1,26 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+
+dj-database-url = "*"
+django = "*"
+django-cors-headers = "*"
+django-heroku = "*"
+djangorestframework = "*"
+"psycopg2" = "*"
+"psycopg2-binary" = "*"
+pycodestyle = "*"
+pytz = "*"
+whitenoise = "*"
+pylint = "*"
+"pep8" = "*"
+"autopep8" = "*"
+
+
+[dev-packages]
+
