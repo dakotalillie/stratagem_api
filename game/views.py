@@ -166,6 +166,7 @@ class OrdersList(APIView):
 
     def post(self, request, pk, format=None):
         game = Game.objects.get(pk=pk)
+        retreat_phase_necessary = False
         if game.current_turn().phase == 'diplomatic':
             orders = [utils.create_order_from_data(data)
                       for unit_id, data in request.data['orders'].items()]
@@ -197,12 +198,16 @@ class OrdersList(APIView):
 
             utils.update_unit_locations(locations, displaced_units, orders)
             retreat_phase_necessary = len(displaced_units) > 0
+        elif game.current_turn().phase == 'retreat':
+            orders = [utils.create_retreat_order_from_data(data, game)
+                      for unit_id, data in request.data['orders'].items()]
+            locations = utils.handle_retreat_conflicts(orders)
+            utils.update_retreat_unit_locations(locations, orders)
         elif game.current_turn().phase == 'reinforcement':
             for territory, order_data in request.data['orders'].items():
                 utils.create_reinforcement_order_from_data(order_data, game)
         # CREATE NEW CURRENT TURN
-        utils.create_new_turn(game.current_turn(),
-                              retreat_phase_necessary=False)
+        utils.create_new_turn(game.current_turn(), retreat_phase_necessary)
         if game.current_turn().phase == 'reinforcement':
             utils.update_territory_owners(game)
         serializer = GameDetailSerializer(game)

@@ -64,7 +64,7 @@ class Command(BaseCommand):
 
     def _create_units(self, country_data):
         game = Game.objects.first()
-        seed_scenarios.test_unit_deletion(game)
+        seed_scenarios.standard(game, country_data)
 
     def handle(self, *args, **options):
         with open('game/data/countries.json') as countries_json:

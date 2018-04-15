@@ -33,6 +33,7 @@ class TerritorySerializer(serializers.ModelSerializer):
 class UnitSerializer(serializers.ModelSerializer):
 
     territory = serializers.StringRelatedField(read_only=True)
+    retreating_from = serializers.StringRelatedField(read_only=True)
     country = serializers.StringRelatedField(read_only=True)
 
     class Meta:
