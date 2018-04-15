@@ -142,7 +142,8 @@ CORS_ORIGIN_ALLOW_ALL = True
 AUTH_USER_MODEL = 'game.Player'
 
 JWT_AUTH = {
-    'JWT_RESPONSE_PAYLOAD_HANDLER': 'stratagem_api.utils.my_jwt_response_handler'
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'stratagem_api.utils.my_jwt_response_handler',
+    'JWT_VERIFY_EXPIRATION': False
 }
 
 # Configure Django app for Heroku
