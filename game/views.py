@@ -1,54 +1,26 @@
 import pdb
 import json
 
-from django.contrib.auth import authenticate
 from django.http import Http404
 from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from game.models import Game, Country, Territory, Unit, Turn, Order
-from game.serializers import UserSerializer, GameDetailSerializer
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view
+from .models import Game, Country, Territory, Unit, Turn, Order
+from . import serializers
 from . import utils
 
 
-# this all isn't necessary currently but will become useful again with
-# the incorporation of React-Router-Redux
-
-# class Login(ObtainAuthToken):
-
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.serializer_class(data=request.data,
-#                                            context={'request': request})
-#         serializer.is_valid(raise_exception=True)
-#         user = serializer.validated_data['user']
-#         token, created = Token.objects.get_or_create(user=user)
-#         return Response({
-#             'token': token.key,
-#             'first_name': user.first_name,
-#             'last_name': user.last_name,
-#             'email': user.email,
-#             'games': [{'id': x.id,
-#                        'title': x.title,
-#                        'created_at': x.created_at
-#                        } for x in user.games.all()]
-#         })
-
-
-class Sessions(APIView):
+@api_view(['GET'])
+def current_user(request):
     """
-    Return a user's data if they have a valid token.
+    Determine the current user by their token, and return their data
     """
-
-    permission_classes = (permissions.AllowAny,)
-
-    def get(self, request, format=None):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    serializer = serializers.UserSerializer(request.user)
+    return Response(serializer.data)
 
 
-class UsersList(APIView):
+class UserList(APIView):
     """
     Create a new user, receive back that user's token.
     """
@@ -56,12 +28,10 @@ class UsersList(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request, format=None):
-        serializer = UserSerializer(data=request.data)
+        serializer = serializers.UserSerializerWithToken(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            token = Token.objects.get(user=user)
-            return Response({'token': token.key},
-                            status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -120,7 +90,7 @@ class Sandbox(APIView):
         return Response({'game_id': game.id}, status=status.HTTP_201_CREATED)
 
 
-class GamesList(APIView):
+class GameList(APIView):
     """
     List all games belonging to a particular player, or create a new game.
     """
@@ -132,7 +102,7 @@ class GamesList(APIView):
         pass
 
 
-class GamesDetail(APIView):
+class GameDetail(APIView):
     """
     Retrieve, update, and delete games.
     """
@@ -147,7 +117,7 @@ class GamesDetail(APIView):
 
     def get(self, request, pk, format=None):
         game = self.get_object(pk)
-        serializer = GameDetailSerializer(game)
+        serializer = serializers.GameDetailSerializer(game)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, format=None):
@@ -157,7 +127,7 @@ class GamesDetail(APIView):
         pass
 
 
-class OrdersList(APIView):
+class OrderList(APIView):
     """
     Create and delete orders in batches
     """
@@ -211,7 +181,7 @@ class OrdersList(APIView):
         utils.create_new_turn(game.current_turn(), retreat_phase_necessary)
         if game.current_turn().phase == 'reinforcement':
             utils.update_territory_owners(game)
-        serializer = GameDetailSerializer(game)
+        serializer = serializers.GameDetailSerializer(game)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, pk, format=None):

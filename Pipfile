@@ -20,6 +20,7 @@ whitenoise = "*"
 pylint = "*"
 "pep8" = "*"
 "autopep8" = "*"
+djangorestframework-jwt = "*"
 
 
 [dev-packages]
