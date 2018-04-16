@@ -21,6 +21,7 @@ pylint = "*"
 "pep8" = "*"
 "autopep8" = "*"
 djangorestframework-jwt = "*"
+gunicorn = "*"
 
 
 [dev-packages]
