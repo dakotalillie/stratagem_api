@@ -1,1 +1,1 @@
-web: gunicorn stratagem_api.wsgi
+web: gunicorn stratagem_api.wsgi --log-file -
