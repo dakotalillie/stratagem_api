@@ -145,7 +145,3 @@ JWT_AUTH = {
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'stratagem_api.utils.my_jwt_response_handler',
     'JWT_VERIFY_EXPIRATION': False
 }
-
-# Configure Django app for Heroku
-import django_heroku
-django_heroku.settings(locals())
