@@ -5,7 +5,6 @@
       <change beforePath="$PROJECT_DIR$/game/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/game/tests/test_diplomatic_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/tests/test_diplomatic_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/game/utils/diplomatic_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/utils/diplomatic_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/views.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -21,8 +20,8 @@
           <file leaf-file-name="test_diplomatic_utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/game/tests/test_diplomatic_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="780">
-                  <caret line="39" column="42" lean-forward="true" selection-start-line="39" selection-start-column="42" selection-end-line="39" selection-end-column="42" />
+                <state relative-caret-position="778">
+                  <caret line="84" column="20" selection-start-line="84" selection-start-column="20" selection-end-line="84" selection-end-column="20" />
                   <folding>
                     <element signature="e#1#33#0" expanded="true" />
                   </folding>
@@ -46,11 +45,23 @@
       </split-first>
       <split-second>
         <leaf>
-          <file leaf-file-name="diplomatic_utils.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="diplomatic_utils.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="963">
-                  <caret line="90" column="5" lean-forward="true" selection-start-line="90" selection-start-column="5" selection-end-line="90" selection-end-column="5" />
+                <state relative-caret-position="662">
+                  <caret line="124" column="7" selection-start-line="124" selection-start-column="7" selection-end-line="124" selection-end-column="7" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="models.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/game/models.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="342">
+                  <caret line="25" column="32" selection-start-line="25" selection-start-column="32" selection-end-line="25" selection-end-column="32" />
+                  <folding>
+                    <element signature="e#0#11#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -68,15 +79,18 @@
         <option value="$PROJECT_DIR$/game/utils/reinforcement_utils.py" />
         <option value="$PROJECT_DIR$/game/utils/retreat_utils.py" />
         <option value="$PROJECT_DIR$/game/views.py" />
-        <option value="$PROJECT_DIR$/game/models.py" />
         <option value="$PROJECT_DIR$/game/tests/test_diplomatic_utils.py" />
         <option value="$PROJECT_DIR$/game/utils/diplomatic_utils.py" />
+        <option value="$PROJECT_DIR$/game/models.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" fullScreen="true">
     <option name="width" value="1920" />
     <option name="height" value="1200" />
+  </component>
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -95,12 +109,6 @@
               <item name="stratagem-backend" type="b2602c69:ProjectViewProjectNode" />
               <item name="stratagem-backend" type="462c0819:PsiDirectoryNode" />
               <item name="game" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="stratagem-backend" type="b2602c69:ProjectViewProjectNode" />
-              <item name="stratagem-backend" type="462c0819:PsiDirectoryNode" />
-              <item name="game" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -192,16 +200,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/game/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="214">
-          <caret line="22" column="30" selection-start-line="22" selection-start-column="30" selection-end-line="22" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/game/views.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1594">
@@ -212,20 +210,30 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="662">
+          <caret line="124" column="7" selection-start-line="124" selection-start-column="7" selection-end-line="124" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/game/tests/test_diplomatic_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="780">
-          <caret line="39" column="42" lean-forward="true" selection-start-line="39" selection-start-column="42" selection-end-line="39" selection-end-column="42" />
+        <state relative-caret-position="778">
+          <caret line="84" column="20" selection-start-line="84" selection-start-column="20" selection-end-line="84" selection-end-column="20" />
           <folding>
             <element signature="e#1#33#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
+    <entry file="file://$PROJECT_DIR$/game/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="963">
-          <caret line="90" column="5" lean-forward="true" selection-start-line="90" selection-start-column="5" selection-end-line="90" selection-end-column="5" />
+        <state relative-caret-position="342">
+          <caret line="25" column="32" selection-start-line="25" selection-start-column="32" selection-end-line="25" selection-end-column="32" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

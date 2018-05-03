@@ -23,6 +23,8 @@ class Game(models.Model):
     objects = models.Manager()
     territories = models.Manager()
     units = models.Manager()
+    countries = models.Manager()
+    turns = models.Manager()
 
     def __str__(self):
         return self.title

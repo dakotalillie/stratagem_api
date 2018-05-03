@@ -43,11 +43,51 @@ class CreateOrderFromDataTestCase(TestCase):
 class CreateMissingHoldOrdersTestCase(TestCase):
 
     def setUp(self):
-        self.game = models.Game(title="New Game")
-        self.game.save()
+        game = models.Game(title="New Game")
+        game.save()
+        self.objects = {
+            'game': game,
+            'units': {u.id: u for u in game.units.filter(active=True)},
+            'territories': {t.abbreviation: t for t in
+                            game.territories.all()}
+        }
 
     def test_create_missing_hold_orders(self):
         orders = []
-        diplomatic_utils.create_missing_hold_orders(self.game, orders)
-        self.assertEqual(len(orders), self.game.units.count())
+        diplomatic_utils.create_missing_hold_orders(orders, self.objects)
+        self.assertEqual(len(orders), len(self.objects['units']))
 
+
+class MapConvoyRouteToModelsTestCase(TestCase):
+
+    def setUp(self):
+        game = models.Game(title="New Game")
+        game.save()
+        self.objects = {
+            'game': game,
+            'units': {u.id: u for u in game.units.filter(active=True)},
+            'territories': {t.abbreviation: t for t in
+                            game.territories.all()}
+        }
+        self.unit = game.units.get(territory=self.objects['territories']['Lon'])
+        self.eng_fleet = game.units.create(
+            territory=self.objects['territories']['ENG'], unit_type='fleet',
+            country=game.countries.get(name='England')
+        )
+        self.objects['units'][self.eng_fleet.id] = self.eng_fleet
+        self.data = {
+            'unit_id': self.unit.id,
+            'origin': 'Lon',
+            'destination': 'Bre',
+            'route': [{'id': self.eng_fleet.id}]
+        }
+
+    def test_map_convoy_route_to_models(self):
+        mapped_data = diplomatic_utils.map_convoy_route_to_models(self.data,
+                                                                  self.objects)
+        self.assertEqual(mapped_data['unit'], self.unit)
+        self.assertEqual(mapped_data['origin'],
+                         self.objects['territories']['Lon'])
+        self.assertEqual(mapped_data['destination'],
+                         self.objects['territories']['Bre'])
+        self.assertIn(self.eng_fleet, mapped_data['route'])
