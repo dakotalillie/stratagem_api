@@ -59,7 +59,7 @@ class UserSerializerWithToken(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ('token', 'username', 'email', 'first_name',
+        fields = ('token', 'id', 'username', 'email', 'first_name',
                   'last_name', 'password', 'games')
 
 

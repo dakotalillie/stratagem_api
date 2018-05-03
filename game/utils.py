@@ -425,7 +425,13 @@ def update_unit_locations(locations, displaced_units, orders):
         unit.retreating_from = unit.territory
         unit.territory = None
         unit.save()
-    # Map units' territories to their new locations.
+    # First, set all unit territories to None so they can be freshly
+    # remapped. Maybe would be better to do topological sort?
+    for territory, unit_dict in locations.items():
+        for unit in unit_dict:
+            unit.territory = None
+            unit.save()
+    # Then, map units' territories to their new locations.
     for territory, unit_dict in locations.items():
         # Since at this point the unit dictionary will have only one
         # entry, the run time of this is not as bad as it looks.

@@ -5,10 +5,16 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
+from . import constants
+import pdb
+import json
 
 
 class Player(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    def __str__(self):
+        return self.first_name + " " + self.last_name
 
 
 class Game(models.Model):
@@ -21,6 +27,55 @@ class Game(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        # This code will trigger only when the game is first created. It
+        # instantiates the turn/countries/territories/units for the
+        # game.
+        if len(self.countries.all()) == 0:
+            country_players = kwargs.pop('country_players', {})
+            countries = {c: Country(name=c, game=self,
+                         user=country_players.get(c))
+                         for c in constants.COUNTRY_NAMES}
+            turn = Turn(year=1901, season='spring', phase='diplomatic',
+                        game=self)
+
+            with open('game/data/countries.json') as countries_json:
+                country_data = json.loads(countries_json.read())
+
+            with open('game/data/territories.json') as territories_json:
+                territories_data = json.loads(territories_json.read())
+
+            territories = {}
+            units = {}
+            for country, data in country_data.items():
+                for terr_abbr in data['startingTerritories']:
+                    terr = Territory(name=territories_data[terr_abbr]['name'],
+                                     abbreviation=terr_abbr,
+                                     owner=countries[country], game=self)
+                    territories[terr_abbr] = terr
+                for unit_dict in data['startingUnits']:
+                    unit = Unit(unit_type=unit_dict['type'],
+                                country=countries[country],
+                                territory=territories[unit_dict['territory']],
+                                coast=unit_dict['coast'], game=self)
+                    units[unit.territory.abbreviation] = unit
+
+            for terr_abbr, terr_data in territories_data.items():
+                if terr_abbr not in territories:
+                    terr = Territory(
+                        name=terr_data['name'], abbreviation=terr_abbr,
+                        game=self)
+                    territories[terr_abbr] = terr
+
+            super(Game, self).save(args, kwargs)
+            turn.save()
+            for country in countries.values():
+                country.save()
+            for territory in territories.values():
+                territory.save()
+            for unit in units.values():
+                unit.save()
 
     def current_turn(self):
         return self.turns.latest('created_at')

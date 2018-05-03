@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view
 from .models import Game, Country, Territory, Unit, Turn, Order
 from . import serializers
 from . import utils
+from . import constants
 
 
 @api_view(['GET'])
@@ -44,10 +45,8 @@ class Sandbox(APIView):
 
     def post(self, request, format=None):
         game = Game(title='New Sandbox')
-        country_names = ['Austria', 'England', 'France', 'Germany', 'Italy',
-                         'Russia', 'Turkey']
         countries = {c: Country(name=c, game=game, user=request.user)
-                     for c in country_names}
+                     for c in constants.COUNTRY_NAMES}
         turn = Turn(year=1901, season='spring', phase='diplomatic', game=game)
 
         with open('game/data/countries.json') as countries_json:
