@@ -6,7 +6,7 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import Game, Country, Territory, Unit, Turn, Order
+from . import models
 from . import serializers
 from . import utils
 from . import constants
@@ -46,7 +46,7 @@ class Sandbox(APIView):
     def post(self, request, format=None):
         country_players = {country: request.user for country in
                            constants.COUNTRY_NAMES}
-        game = Game(title='New Sandbox')
+        game = models.Game(title='New Sandbox')
         game.save(country_players=country_players)
         return Response({'game_id': game.id}, status=status.HTTP_201_CREATED)
 
@@ -72,8 +72,8 @@ class GameDetail(APIView):
 
     def get_object(self, pk):
         try:
-            return Game.objects.get(pk=pk)
-        except Snippet.DoesNotExist:
+            return models.Game.objects.get(pk=pk)
+        except models.Game.DoesNotExist:
             raise Http404
 
     def get(self, request, pk, format=None):
@@ -97,15 +97,15 @@ class OrderList(APIView):
 
     def post(self, request, pk, format=None):
         params = {
-            'game':                    Game.objects.get(pk=pk),
+            'game':                    models.Game.objects.get(pk=pk),
             'request_data':            request.data,
             'retreat_phase_necessary': False
         }
-        if game.current_turn().phase == 'diplomatic':
+        if params['game'].current_turn().phase == 'diplomatic':
             utils.diplomatic_utils.process_diplomatic_turn(params)
-        elif game.current_turn().phase == 'retreat':
+        elif params['game'].current_turn().phase == 'retreat':
             utils.retreat_utils.process_retreat_turn(params)
-        elif game.current_turn().phase == 'reinforcement':
+        elif params['game'].current_turn().phase == 'reinforcement':
             utils.reinforcement_utils.process_reinforcement_turn(params)
         utils.update_turn_utils.update_turn(params)
         serializer = serializers.GameDetailSerializer(params['game'])

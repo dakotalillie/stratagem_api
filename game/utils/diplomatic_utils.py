@@ -1,37 +1,36 @@
-import pdb
 from game import models
 
 
 def process_diplomatic_turn(params):
-    orders = [utils.create_order_from_data(data)
+    orders = [create_order_from_data(data)
               for unit_id, data in params['request_data']['orders'].items()]
-    utils.create_missing_hold_orders(params['game'], orders)
-    convoy_routes = [utils.map_convoy_route_to_models(route)
+    create_missing_hold_orders(params['game'], orders)
+    convoy_routes = [map_convoy_route_to_models(route)
                      for route in params['request_data']['convoy_routes']]
-    locations, supports, conflicts = utils.map_orders_to_locations(orders)
+    locations, supports, conflicts = map_orders_to_locations(orders)
     displaced_units = []
     # Convoy routes need to be resolved first, because if there's a unit
     # providing support in the territory that the convoyed unit is
     # moving to, that support could be cut.
     while len(convoy_routes) > 0:
         convoy_route = convoy_routes.pop(0)
-        other_routes = utils.more_possible_convoy_routes(convoy_routes,
-                                                         convoy_route)
-        resolved = utils.resolve_conflicts_in_convoy_route(
+        other_routes = more_possible_convoy_routes(convoy_routes,
+                                                   convoy_route)
+        resolved = resolve_conflicts_in_convoy_route(
             convoy_route, locations, supports, conflicts, displaced_units,
             other_routes
         )
         if not resolved:
             convoy_routes.append(convoy_route)
-    utils.add_supports(locations, supports, conflicts)
-    utils.check_for_illegal_swaps(orders, locations, conflicts)
+    add_supports(locations, supports, conflicts)
+    check_for_illegal_swaps(orders, locations, conflicts)
     while len(conflicts) > 0:
         conflict_location = conflicts.pop()
-        utils.resolve_conflict(conflict_location, locations, conflicts,
-                               displaced_units)
+        resolve_conflict(conflict_location, locations, conflicts,
+                         displaced_units)
 
-    utils.update_unit_locations(locations, displaced_units, orders)
-    retreat_phase_necessary = len(displaced_units) > 0
+    update_unit_locations(locations, displaced_units, orders)
+    params['retreat_phase_necessary'] = len(displaced_units) > 0
 
 
 def create_order_from_data(data):
@@ -90,7 +89,7 @@ def create_missing_hold_orders(game, orders):
     for order in orders:
         game_units.remove(order.unit)
     for unit in game_units:
-        order = Order.objects.create(
+        order = models.Order.objects.create(
             turn=game.current_turn(),
             unit=unit,
             order_type='hold',
@@ -102,18 +101,17 @@ def create_missing_hold_orders(game, orders):
 
 
 def map_convoy_route_to_models(data):
-    mapped_data = {}
-    mapped_data['unit'] = Unit.objects.get(pk=data['unit_id'])
+    mapped_data = {'unit': models.Unit.objects.get(pk=data['unit_id'])}
     game = mapped_data['unit'].game
-    mapped_data['origin'] = Territory.objects.get(
+    mapped_data['origin'] = models.Territory.objects.get(
         game=game,
         abbreviation=data['origin']
     )
-    mapped_data['destination'] = Territory.objects.get(
+    mapped_data['destination'] = models.Territory.objects.get(
         game=game,
         abbreviation=data['destination']
     )
-    mapped_data['route'] = [Unit.objects.get(pk=unit['id'])
+    mapped_data['route'] = [models.Unit.objects.get(pk=unit['id'])
                             for unit in data['route']]
     return mapped_data
 
@@ -213,10 +211,8 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
             # This checks whether the only way support could be cut in
             # the territory the convoyed unit is moving to is by the
             # convoyed unit itself.
-            if (set(locations[support_order.origin].keys()) == set([
-                support_order.unit,
-                convoy_route['unit']
-            ])):
+            if (set(locations[support_order.origin].keys()) == {
+                  support_order.unit, convoy_route['unit']}):
                 # Check if there are other routes with the same
                 # origin and destination. If so, defer, and
                 # sort those out first. Otherwise, with no other routes,
@@ -258,7 +254,7 @@ def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
             return_unit_to_origin(winner, locations, conflicts)
         else:
             units_in_terr.pop(unit)
-            if (unit.territory == conflict_location):
+            if unit.territory == conflict_location:
                 unit.invaded_from = winner.territory
                 displaced_units.append(unit)
             else:
@@ -317,13 +313,12 @@ def resolve_conflict(conflict_location, locations, conflicts, displaced_units):
         if unit.territory == conflict_location:
             defender = unit
             break
-    winner = determine_conflict_outcome(defender, units_in_terr, locations,
-                                        conflicts)
+    winner = determine_conflict_outcome(defender, units_in_terr)
     return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
                                      locations, conflicts, displaced_units)
 
 
-def determine_conflict_outcome(defender, units_in_terr, locations, conflicts):
+def determine_conflict_outcome(defender, units_in_terr):
     max_unit = max(units_in_terr, key=units_in_terr.get)
     max_strength = units_in_terr[max_unit]
     standoff = False

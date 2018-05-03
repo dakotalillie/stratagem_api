@@ -1,18 +1,16 @@
-import pdb
-import json
-from game.models import Game, Country, Territory, Unit, Turn, Order
+from game import models
 
 
 def process_reinforcement_turn(game, request_data):
-    for territory, order_data in request.data['orders'].items():
-        utils.create_reinforcement_order_from_data(order_data, game)
+    for territory, order_data in request_data['orders'].items():
+        create_reinforcement_order_from_data(order_data, game)
 
 
 def create_reinforcement_order_from_data(data, game):
     if data['order_type'] == 'create':
         territory = game.territories.get(abbreviation=data['territory'])
         country = game.countries.get(name=data['country'])
-        unit = Unit.objects.create(
+        unit = models.Unit.objects.create(
             territory=territory,
             unit_type=data['unit_type'],
             country=country,
@@ -20,7 +18,7 @@ def create_reinforcement_order_from_data(data, game):
             coast=data['coast']
         )
 
-        Order.objects.create(
+        models.Order.objects.create(
             turn=game.current_turn(),
             unit=unit,
             order_type='create',
@@ -30,12 +28,12 @@ def create_reinforcement_order_from_data(data, game):
 
     elif data['order_type'] == 'delete':
         territory = game.territories.get(abbreviation=data['territory'])
-        unit = Unit.objects.get(pk=data['unit_id'])
+        unit = models.Unit.objects.get(pk=data['unit_id'])
         unit.active = False
         unit.territory = None
         unit.save()
 
-        Order.objects.create(
+        models.Order.objects.create(
             turn=game.current_turn(),
             unit=unit,
             order_type='delete',
