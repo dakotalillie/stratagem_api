@@ -250,6 +250,23 @@ def resolve_conflicts_in_convoy_route(convoy_route, locations,
 def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
                                       locations, supports, conflicts,
                                       other_routes):
+    """
+    Determines the result of a specific conflict in a convoy route.
+    Distinct from determine_conflict_outcome because convoy conflicts
+    have the possibility of being deferred, if their resolution depends
+    on the results of other convoy routes.
+    :param convoy_route: a dict containing the data for the convoy route.
+    :param defender: the convoying fleet being attacked.
+    :param units_in_terr: all the units in the convoying fleet's territory
+    :param locations: a dict of units (and their associated strengths)
+           within each territory.
+    :param supports: a list of support orders.
+    :param conflicts: a set containing the territories where conflicts
+           are occurring.
+    :param other_routes: a boolean determining whether or not other
+           convoy routes exist with the same origin/destination.
+    :return: either the victorious unit object or the string 'defer'
+    """
     for unit in units_in_terr:
         # Find all supports for that unit.
         unit_supports = [
