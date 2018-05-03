@@ -181,7 +181,8 @@ def resolve_conflicts_in_convoy_route(convoy_route, locations,
     displaced, and if there are no other routes with the same
     origin/destination, the convoyed unit gets returned to its original
     territory.
-    :param convoy_route: a list of convoy route dicts.
+    :param convoy_route: a dict containing the data for the convoy route
+           (see map_convoy_route_to_models() for exact data).
     :param locations: a dict of units (and their associated strengths)
            within each territory.
     :param supports: a list of support orders.
@@ -265,7 +266,7 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
                 # Check if there are other routes with the same
                 # origin and destination. If so, defer, and
                 # sort those out first. Otherwise, with no other routes,
-                # the convoyed until cannot cut support from the
+                # the convoyed unit cannot cut support from the
                 # territory is is moving to.
                 if other_routes:
                     return 'defer'

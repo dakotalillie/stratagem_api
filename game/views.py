@@ -5,7 +5,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from . import models
 from . import serializers
-from . import utils
+from .utils import diplomatic_utils
+from .utils import reinforcement_utils
+from .utils import retreat_utils
+from .utils import update_turn_utils
 from . import constants
 
 
@@ -99,12 +102,12 @@ class OrderList(APIView):
             'retreat_phase_necessary': False
         }
         if params['game'].current_turn().phase == 'diplomatic':
-            utils.diplomatic_utils.process_diplomatic_turn(params)
+            diplomatic_utils.process_diplomatic_turn(params)
         elif params['game'].current_turn().phase == 'retreat':
-            utils.retreat_utils.process_retreat_turn(params)
+            retreat_utils.process_retreat_turn(params)
         elif params['game'].current_turn().phase == 'reinforcement':
-            utils.reinforcement_utils.process_reinforcement_turn(params)
-        utils.update_turn_utils.update_turn(params)
+            reinforcement_utils.process_reinforcement_turn(params)
+        update_turn_utils.update_turn(params)
         serializer = serializers.GameDetailSerializer(params['game'])
         return Response(serializer.data, status=status.HTTP_200_OK)
 
