@@ -103,9 +103,12 @@ class MapOrdersToLocationsTestCase(TestCase):
             'territories': {t.abbreviation: t for t in
                             game.territories.all()}
         }
-        self.a_par = game.units.get(territory=self.objects['territories']['Par'])
-        self.a_mar = game.units.get(territory=self.objects['territories']['Mar'])
-        self.a_mun = game.units.get(territory=self.objects['territories']['Mun'])
+        self.a_par = game.units.get(
+            territory=self.objects['territories']['Par'])
+        self.a_mar = game.units.get(
+            territory=self.objects['territories']['Mar'])
+        self.a_mun = game.units.get(
+            territory=self.objects['territories']['Mun'])
         order_data = [
             {'unit_id': self.a_par.id, 'order_type': 'move', 'origin': 'Par',
              'destination': 'Bur', 'coast': ''},
@@ -133,3 +136,5 @@ class MapOrdersToLocationsTestCase(TestCase):
         support_orders = [x for x in self.orders if x.order_type == 'support']
         self.assertEqual(supports, support_orders)
         self.assertEqual(conflicts, {self.objects['territories']['Bur']})
+
+

@@ -3,8 +3,8 @@ from game import models
 
 def process_diplomatic_turn(params):
     """
-    This is the primary 'master' function which dictates how diplomatic
-    turns should be processed.
+    The primary 'master' function which dictates how diplomatic turns
+    should be processed.
     :param params: a dict with the following keys:
         'game': the Game object,
         'request_data': the data received from the frontend, with two
@@ -51,8 +51,8 @@ def process_diplomatic_turn(params):
 
 def create_order_from_data(data, objects):
     """
-    This function transforms the dictionary data for an order received
-    from the frontend into an actual Order object.
+    Transforms the dictionary data for an order received from the
+    frontend into an actual Order object.
     :param data: a dict with the object's data.
     :param objects: a dict with Game, Territory, and Unit objects.
     :return: a newly created Order object.
@@ -93,8 +93,8 @@ def create_order_from_data(data, objects):
 
 def create_missing_hold_orders(orders, objects):
     """
-    This function creates hold orders for all of the game's active units
-    which weren't explicitly given orders by the player(s).
+    Creates hold orders for all of the game's active units which weren't
+    explicitly given orders by the player(s).
     :param orders: a list of Order objects.
     :param objects: a dict with Game, Territory, and Unit objects.
     :return: None. Modifies orders.
@@ -116,9 +116,8 @@ def create_missing_hold_orders(orders, objects):
 
 def map_convoy_route_to_models(data, objects):
     """
-    This function creates a dict for each convoy route, containing the
-    convoy's unit, origin, destination, and a list of the fleets used
-    in the route.
+    Creates a dict for each convoy route, containing the convoy's unit,
+    origin, destination, and a list of the fleets used in the route.
     :param data: a dict with the convoy route's data.
     :param objects: a dict with Game, Territory, and Unit objects.
     :return: a dict.
@@ -133,11 +132,10 @@ def map_convoy_route_to_models(data, objects):
 
 def map_orders_to_locations(orders):
     """
-    This function takes in a list of orders and uses that to create a
-    dict of locations (used to determine where a unit is at any given
-    point in the order-resolving process), a list of support orders,
-    and a set containing the territories where conflicts need to be
-    resolved.
+    Takes in a list of orders and uses that to create a dict of
+    locations (used to determine where a unit is at any given point in
+    the order-resolving process), a list of support orders, and a set
+    containing the territories where conflicts need to be resolved.
     :param orders: a list of Order objects.
     :return: locations dict, supports list, conflicts set.
     """
@@ -159,28 +157,54 @@ def map_orders_to_locations(orders):
 
 
 def more_possible_convoy_routes(convoy_routes, route):
-    count = len([cr for cr in convoy_routes
-                 if cr['origin'] == route['origin'] and
-                 cr['destination'] == route['destination']])
-    if count > 0:
-        return True
+    """
+    Checks if there are other convoy routes with the same origin and
+    destination as the currently examined route.
+    :param convoy_routes: a list of all convoy routes.
+    :param route: the currently examined convoy route, which has already
+           been popped off the convoy_routes list.
+    :return: a boolean.
+    """
+    for cr in convoy_routes:
+        if (cr['origin'] == route['origin'] and
+                cr['destination'] == route['destination']):
+            return True
     return False
 
 
 def resolve_conflicts_in_convoy_route(convoy_route, locations,
                                       supports, conflicts, displaced_units,
                                       other_routes):
+    """
+    Checks to see if any of the fleets involved in a convoy route are
+    being attacked. If a conflict results in the convoying fleet being
+    displaced, and if there are no other routes with the same
+    origin/destination, the convoyed unit gets returned to its original
+    territory.
+    :param convoy_route: a list of convoy route dicts.
+    :param locations: a dict of units (and their associated strengths)
+           within each territory.
+    :param supports: a list of support orders.
+    :param conflicts: a set containing the territories where conflicts
+           are occurring.
+    :param displaced_units: a list of displaced units.
+    :param other_routes: a boolean determining whether or not other
+           convoy routes exist with the same origin/destination.
+    :return: a boolean. True means the conflict route has been resolved
+             (determined either to be successful or unsuccessful). False
+             means resolution needs to be deferred.
+    """
     for convoyeur in convoy_route['route']:
         if convoyeur.territory in conflicts:
             defender = convoyeur
             units_in_terr = locations[convoyeur.territory]
-            outcome, winner = determine_convoy_conflict_outcome(
+            winner = determine_convoy_conflict_outcome(
                 convoy_route, defender, units_in_terr, locations, supports,
                 conflicts, other_routes,
             )
             # CASE 1: Defender wins. Attackers are shifted back to
             # their original territories and the convoy continues.
-            if outcome == 'defender wins':
+            if winner == defender:
                 return_defeated_units_to_origins(
                     convoyeur.territory, units_in_terr, defender, locations,
                     conflicts, displaced_units
@@ -190,7 +214,9 @@ def resolve_conflicts_in_convoy_route(convoy_route, locations,
             # convoyed unit has to look for alternate routes. If none
             # are found, the convoyed unit remains in their original
             # territory.
-            elif outcome == 'defender loses':
+            elif winner == 'defer':
+                return False
+            else:
                 return_defeated_units_to_origins(
                     convoyeur.territory, units_in_terr, winner, locations,
                     conflicts, displaced_units
@@ -212,8 +238,7 @@ def resolve_conflicts_in_convoy_route(convoy_route, locations,
                 # resolved without checking the other units
                 conflicts.remove(defender.territory)
                 return True
-            elif outcome == 'defer':
-                return False
+
     # Convoy was successful. Remove supports from destination if necessary.
     new_supports = [order for order in supports
                     if order.origin != convoy_route['destination']]
@@ -243,7 +268,7 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
                 # the convoyed until cannot cut support from the
                 # territory is is moving to.
                 if other_routes:
-                    return 'defer', None
+                    return 'defer'
                 else:
                     units_in_terr[unit] += 1
                     supports.remove(support_order)
@@ -253,17 +278,7 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
     # Determine the result. First, we need the maximum strength
     # in this contest. Then, we need to determine if more than
     # one unit has that strength. if so, it's a standoff.
-    # TODO: potentially refactor this into determine_conflict_outcome
-    max_unit = max(units_in_terr, key=units_in_terr.get)
-    max_strength = units_in_terr[max_unit]
-    standoff = False
-    for unit, strength in units_in_terr.items():
-        if strength == max_strength and unit != max_unit:
-            standoff = True
-    if standoff or max_unit == defender:
-        return 'defender wins', defender
-    else:
-        return 'defender loses', max_unit
+    return determine_conflict_outcome(defender, units_in_terr)
 
 
 def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
