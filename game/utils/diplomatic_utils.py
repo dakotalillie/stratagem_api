@@ -19,7 +19,7 @@ def process_diplomatic_turn(params):
                         params['game'].territories.all()}
     }
     orders = [create_order_from_data(data, objects)
-              for unit_id, data in params['request_data']['orders'].items()]
+              for data in params['request_data']['orders'].values()]
     create_missing_hold_orders(orders, objects)
     convoy_routes = [map_convoy_route_to_models(route, objects)
                      for route in params['request_data']['convoy_routes']]
@@ -132,6 +132,15 @@ def map_convoy_route_to_models(data, objects):
 
 
 def map_orders_to_locations(orders):
+    """
+    This function takes in a list of orders and uses that to create a
+    dict of locations (used to determine where a unit is at any given
+    point in the order-resolving process), a list of support orders,
+    and a set containing the territories where conflicts need to be
+    resolved.
+    :param orders: a list of Order objects.
+    :return: locations dict, supports list, conflicts set.
+    """
     locations = {}
     supports = []
     conflicts = set([])
