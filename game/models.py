@@ -1,12 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
 from . import constants
-import pdb
 import json
 
 
@@ -24,6 +19,9 @@ class Game(models.Model):
     title = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Necessary to resolve unresolved references in PyCharm
+    territories = models.Manager()
+    units = models.Manager()
 
     def __str__(self):
         return self.title
@@ -113,6 +111,8 @@ class Territory(models.Model):
                               blank=True, related_name='territories')
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='territories')
+    # Necessary to avoid unresolved references in PyCharm.
+    objects = models.Manager()
 
     def __str__(self):
         return self.abbreviation
@@ -147,6 +147,8 @@ class Unit(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='units')
     coast = models.CharField(max_length=2, choices=COASTS, blank=True)
+    # Necessary to avoid unresolved references in PyCharm.
+    objects = models.Manager()
 
     def __str__(self):
         return "%s %s %s" % (self.country, self.unit_type, self.territory)
@@ -214,3 +216,5 @@ class Order(models.Model):
                                         related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
     via_convoy = models.BooleanField(default=False)
+    # Necessary to avoid unresolved references in PyCharm.
+    objects = models.Manager()
