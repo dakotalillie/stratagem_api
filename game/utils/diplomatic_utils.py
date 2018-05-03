@@ -2,10 +2,26 @@ from game import models
 
 
 def process_diplomatic_turn(params):
-    orders = [create_order_from_data(data)
+    """
+    This is the primary 'master' function which dictates how diplomatic
+    turns should be processed.
+    :param params: a dict with the following keys:
+        'game': the Game object,
+        'request_data': the data received from the frontend, with two
+        sub-keys, 'orders' and 'convoy_routes',
+        'retreat_phase_necessary': a boolean, which defaults to False.
+    :return: None.
+    """
+    objects = {
+        'game': params['game'],
+        'units': {u.id: u for u in params['game'].units.filter(active=True)},
+        'territories': {t.abbreviation: t for t in
+                        params['game'].territories.all()}
+    }
+    orders = [create_order_from_data(data, objects)
               for unit_id, data in params['request_data']['orders'].items()]
-    create_missing_hold_orders(params['game'], orders)
-    convoy_routes = [map_convoy_route_to_models(route)
+    create_missing_hold_orders(game, orders)
+    convoy_routes = [map_convoy_route_to_models(game, route)
                      for route in params['request_data']['convoy_routes']]
     locations, supports, conflicts = map_orders_to_locations(orders)
     displaced_units = []
@@ -33,17 +49,18 @@ def process_diplomatic_turn(params):
     params['retreat_phase_necessary'] = len(displaced_units) > 0
 
 
-def create_order_from_data(data):
-    unit = models.Unit.objects.get(pk=data['unit_id'])
-    game = unit.game
-    origin = models.Territory.objects.get(
-        game=game,
-        abbreviation=data['origin']
-    )
-    destination = models.Territory.objects.get(
-        game=game,
-        abbreviation=data['destination']
-    )
+def create_order_from_data(data, objects):
+    """
+    This function transforms the dictionary data for an order received
+    from the frontend into an actual Order object.
+    :param data: a dict with the object's data.
+    :param objects: a dict with the following shape:
+        'game': a Game object,
+        'units: a dict with the game's units, mapped by id
+        'territories': a dict with the game's territories, mapped by
+                       abbreviation
+    :return: a newly created Order object.
+    """
     aux_unit = None
     aux_order_type = ''
     aux_origin = None
@@ -51,26 +68,20 @@ def create_order_from_data(data):
     via_convoy = False
 
     if 'aux_unit_id' in data:
-        aux_unit = models.Unit.objects.get(pk=data['aux_unit_id'])
+        aux_unit = objects['units'][data['aux_unit_id']]
         aux_order_type = data['aux_order_type']
-        aux_origin = models.Territory.objects.get(
-            game=game,
-            abbreviation=data.get('aux_origin')
-        )
-        aux_destination = models.Territory.objects.get(
-            game=game,
-            abbreviation=data.get('aux_destination')
-        )
+        aux_origin = objects['territories'][data['aux_origin']]
+        aux_destination = objects['territories'][data['aux_destination']]
 
     if 'via_convoy' in data:
         via_convoy = data['via_convoy']
 
     order = models.Order(
-        turn=game.current_turn(),
-        unit=models.Unit.objects.get(pk=data['unit_id']),
+        turn=objects['game'].current_turn(),
+        unit=objects['units'][data['unit_id']],
         order_type=data['order_type'],
-        origin=origin,
-        destination=destination,
+        origin=objects['territories'][data['origin']],
+        destination=objects['territories'][data['destination']],
         coast=data['coast'],
         aux_unit=aux_unit,
         aux_order_type=aux_order_type,
@@ -85,6 +96,13 @@ def create_order_from_data(data):
 
 
 def create_missing_hold_orders(game, orders):
+    """
+    This function creates hold orders for all of the game's active units
+    which weren't explicitly given orders by the player(s).
+    :param game: a Game object.
+    :param orders: a list of Order objects.
+    :return: None. Simply modifies orders.
+    """
     game_units = set(game.units.filter(active=True))
     for order in orders:
         game_units.remove(order.unit)
@@ -100,19 +118,13 @@ def create_missing_hold_orders(game, orders):
         orders.append(order)
 
 
-def map_convoy_route_to_models(data):
-    mapped_data = {'unit': models.Unit.objects.get(pk=data['unit_id'])}
-    game = mapped_data['unit'].game
-    mapped_data['origin'] = models.Territory.objects.get(
-        game=game,
-        abbreviation=data['origin']
-    )
-    mapped_data['destination'] = models.Territory.objects.get(
-        game=game,
-        abbreviation=data['destination']
-    )
-    mapped_data['route'] = [models.Unit.objects.get(pk=unit['id'])
-                            for unit in data['route']]
+def map_convoy_route_to_models(game, data):
+    mapped_data = {'unit': models.Unit.objects.get(pk=data['unit_id']),
+                   'origin': game.territories.get(abbreviation=data['origin']),
+                   'destination': game.territories.get(
+                       abbreviation=data['destination']),
+                   'route': [models.Unit.objects.get(pk=unit['id'])
+                             for unit in data['route']]}
     return mapped_data
 
 

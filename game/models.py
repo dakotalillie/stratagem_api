@@ -20,6 +20,7 @@ class Game(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     # Necessary to resolve unresolved references in PyCharm
+    objects = models.Manager()
     territories = models.Manager()
     units = models.Manager()
 
