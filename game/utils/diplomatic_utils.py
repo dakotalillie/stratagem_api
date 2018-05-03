@@ -1,16 +1,47 @@
 import pdb
-import json
-from game.models import Game, Country, Territory, Unit, Turn, Order
+from game import models
+
+
+def process_diplomatic_turn(params):
+    orders = [utils.create_order_from_data(data)
+              for unit_id, data in params['request_data']['orders'].items()]
+    utils.create_missing_hold_orders(params['game'], orders)
+    convoy_routes = [utils.map_convoy_route_to_models(route)
+                     for route in params['request_data']['convoy_routes']]
+    locations, supports, conflicts = utils.map_orders_to_locations(orders)
+    displaced_units = []
+    # Convoy routes need to be resolved first, because if there's a unit
+    # providing support in the territory that the convoyed unit is
+    # moving to, that support could be cut.
+    while len(convoy_routes) > 0:
+        convoy_route = convoy_routes.pop(0)
+        other_routes = utils.more_possible_convoy_routes(convoy_routes,
+                                                         convoy_route)
+        resolved = utils.resolve_conflicts_in_convoy_route(
+            convoy_route, locations, supports, conflicts, displaced_units,
+            other_routes
+        )
+        if not resolved:
+            convoy_routes.append(convoy_route)
+    utils.add_supports(locations, supports, conflicts)
+    utils.check_for_illegal_swaps(orders, locations, conflicts)
+    while len(conflicts) > 0:
+        conflict_location = conflicts.pop()
+        utils.resolve_conflict(conflict_location, locations, conflicts,
+                               displaced_units)
+
+    utils.update_unit_locations(locations, displaced_units, orders)
+    retreat_phase_necessary = len(displaced_units) > 0
 
 
 def create_order_from_data(data):
-    unit = Unit.objects.get(pk=data['unit_id'])
+    unit = models.Unit.objects.get(pk=data['unit_id'])
     game = unit.game
-    origin = Territory.objects.get(
+    origin = models.Territory.objects.get(
         game=game,
         abbreviation=data['origin']
     )
-    destination = Territory.objects.get(
+    destination = models.Territory.objects.get(
         game=game,
         abbreviation=data['destination']
     )
@@ -21,13 +52,13 @@ def create_order_from_data(data):
     via_convoy = False
 
     if 'aux_unit_id' in data:
-        aux_unit = Unit.objects.get(pk=data['aux_unit_id'])
+        aux_unit = models.Unit.objects.get(pk=data['aux_unit_id'])
         aux_order_type = data['aux_order_type']
-        aux_origin = Territory.objects.get(
+        aux_origin = models.Territory.objects.get(
             game=game,
             abbreviation=data.get('aux_origin')
         )
-        aux_destination = Territory.objects.get(
+        aux_destination = models.Territory.objects.get(
             game=game,
             abbreviation=data.get('aux_destination')
         )
@@ -35,9 +66,9 @@ def create_order_from_data(data):
     if 'via_convoy' in data:
         via_convoy = data['via_convoy']
 
-    order = Order(
+    order = models.Order(
         turn=game.current_turn(),
-        unit=Unit.objects.get(pk=data['unit_id']),
+        unit=models.Unit.objects.get(pk=data['unit_id']),
         order_type=data['order_type'],
         origin=origin,
         destination=destination,
@@ -50,81 +81,6 @@ def create_order_from_data(data):
     )
 
     order.save()
-
-    return order
-
-
-def create_reinforcement_order_from_data(data, game):
-    if data['order_type'] == 'create':
-        territory = game.territories.get(abbreviation=data['territory'])
-        country = game.countries.get(name=data['country'])
-        unit = Unit.objects.create(
-            territory=territory,
-            unit_type=data['unit_type'],
-            country=country,
-            game=game,
-            coast=data['coast']
-        )
-
-        Order.objects.create(
-            turn=game.current_turn(),
-            unit=unit,
-            order_type='create',
-            origin=territory,
-            coast=data['coast']
-        )
-
-    elif data['order_type'] == 'delete':
-        territory = game.territories.get(abbreviation=data['territory'])
-        unit = Unit.objects.get(pk=data['unit_id'])
-        unit.active = False
-        unit.territory = None
-        unit.save()
-
-        Order.objects.create(
-            turn=game.current_turn(),
-            unit=unit,
-            order_type='delete',
-            origin=territory
-        )
-
-
-def create_retreat_order_from_data(data, game):
-    if data['order_type'] == 'move':
-        unit = Unit.objects.get(pk=data['unit_id'])
-        game = unit.game
-        origin = Territory.objects.get(
-            game=game,
-            abbreviation=data['origin']
-        )
-        destination = Territory.objects.get(
-            game=game,
-            abbreviation=data['destination']
-        )
-
-        order = Order.objects.create(
-            turn=game.current_turn(),
-            unit=Unit.objects.get(pk=data['unit_id']),
-            order_type='move',
-            origin=origin,
-            destination=destination,
-            coast=data['coast'],
-        )
-
-    elif data['order_type'] == 'delete':
-        territory = game.territories.get(abbreviation=data['territory'])
-        unit = Unit.objects.get(pk=data['unit_id'])
-        unit.active = False
-        unit.retreating_from = None
-        unit.invaded_from = None
-        unit.save()
-
-        order = Order.objects.create(
-            turn=game.current_turn(),
-            unit=unit,
-            order_type='delete',
-            origin=territory
-        )
 
     return order
 
@@ -145,24 +101,6 @@ def create_missing_hold_orders(game, orders):
         orders.append(order)
 
 
-def create_missing_delete_orders(game, orders):
-    game_units = set(game.units.filter(territory=None, active=True))
-    for order in orders:
-        game_units.discard(order.unit)
-    for unit in game_units:
-        Order.objects.create(
-            turn=game.current_turn(),
-            unit=unit,
-            order_type='delete',
-            origin=unit.retreating_from
-        )
-
-        unit.active = False
-        unit.retreating_from = None
-        unit.invaded_from = None
-        unit.save()
-
-
 def map_convoy_route_to_models(data):
     mapped_data = {}
     mapped_data['unit'] = Unit.objects.get(pk=data['unit_id'])
@@ -178,15 +116,6 @@ def map_convoy_route_to_models(data):
     mapped_data['route'] = [Unit.objects.get(pk=unit['id'])
                             for unit in data['route']]
     return mapped_data
-
-
-def more_possible_convoy_routes(convoy_routes, route):
-    count = len([cr for cr in convoy_routes
-                 if cr['origin'] == route['origin'] and
-                 cr['destination'] == route['destination']])
-    if count > 0:
-        return True
-    return False
 
 
 def map_orders_to_locations(orders):
@@ -207,25 +136,13 @@ def map_orders_to_locations(orders):
     return locations, supports, conflicts
 
 
-def handle_retreat_conflicts(orders):
-    locations = {}
-    conflicts = set([])
-    for order in orders:
-        if order.destination not in locations:
-            locations[order.destination] = [order.unit]
-        # CASE: other unit(s) attempting to occupy territory
-        else:
-            locations[order.destination].append(order.unit)
-            conflicts.add(order.destination)
-    for conflict_location in conflicts:
-        for unit in locations[conflict_location]:
-            unit.active = False
-            unit.retreating_from = None
-            unit.invaded_from = None
-            unit.save()
-        locations.pop(conflict_location)
-
-    return locations
+def more_possible_convoy_routes(convoy_routes, route):
+    count = len([cr for cr in convoy_routes
+                 if cr['origin'] == route['origin'] and
+                 cr['destination'] == route['destination']])
+    if count > 0:
+        return True
+    return False
 
 
 def resolve_conflicts_in_convoy_route(convoy_route, locations,
@@ -329,6 +246,33 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
         return 'defender loses', max_unit
 
 
+def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
+                                     locations, conflicts, displaced_units):
+    units_to_move = [unit for unit in units_in_terr if unit != winner]
+
+    for unit in units_to_move:
+        # Cannot displace own unit.
+        if (unit.territory == conflict_location and unit.country ==
+                winner.country):
+            units_in_terr.pop(winner)
+            return_unit_to_origin(winner, locations, conflicts)
+        else:
+            units_in_terr.pop(unit)
+            if (unit.territory == conflict_location):
+                unit.invaded_from = winner.territory
+                displaced_units.append(unit)
+            else:
+                return_unit_to_origin(unit, locations, conflicts)
+
+
+def return_unit_to_origin(unit, locations, conflicts):
+    if unit.territory not in locations:
+        locations[unit.territory] = {unit: 1}
+    else:
+        locations[unit.territory][unit] = 1
+        conflicts.add(unit.territory)
+
+
 def add_supports(locations, supports, conflicts):
     for order in supports:
         # Check to make sure the supported action is actually being
@@ -392,33 +336,6 @@ def determine_conflict_outcome(defender, units_in_terr, locations, conflicts):
         return max_unit
 
 
-def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
-                                     locations, conflicts, displaced_units):
-    units_to_move = [unit for unit in units_in_terr if unit != winner]
-
-    for unit in units_to_move:
-        # Cannot displace own unit.
-        if (unit.territory == conflict_location and unit.country ==
-                winner.country):
-            units_in_terr.pop(winner)
-            return_unit_to_origin(winner, locations, conflicts)
-        else:
-            units_in_terr.pop(unit)
-            if (unit.territory == conflict_location):
-                unit.invaded_from = winner.territory
-                displaced_units.append(unit)
-            else:
-                return_unit_to_origin(unit, locations, conflicts)
-
-
-def return_unit_to_origin(unit, locations, conflicts):
-    if unit.territory not in locations:
-        locations[unit.territory] = {unit: 1}
-    else:
-        locations[unit.territory][unit] = 1
-        conflicts.add(unit.territory)
-
-
 def update_unit_locations(locations, displaced_units, orders):
     # Handle displaced units.
     for unit in displaced_units:
@@ -447,60 +364,3 @@ def update_unit_locations(locations, displaced_units, orders):
             unit.territory = territory
             unit.coast = coast
             unit.save()
-
-
-def update_retreat_unit_locations(locations, orders):
-    for territory, unit_list in locations.items():
-        # Since at this point the unit dictionary will have only one
-        # entry, the run time of this is not as bad as it looks.
-        unit = unit_list[0]
-        coast = unit.coast
-        for order in orders:
-            if order.unit == unit and order.destination == territory:
-                coast = order.coast
-                break
-            elif order.unit == unit:
-                break
-        unit.territory = territory
-        unit.coast = coast
-        unit.retreating_from = None
-        unit.invaded_from = None
-        unit.save()
-
-
-def create_new_turn(current_turn, retreat_phase_necessary):
-    if current_turn.phase == 'diplomatic':
-        if retreat_phase_necessary:
-            turn = Turn(year=current_turn.year, season=current_turn.season,
-                        phase='retreat', game=current_turn.game)
-        elif not retreat_phase_necessary and current_turn.season == 'fall':
-            turn = Turn(year=current_turn.year, season='fall',
-                        phase='reinforcement', game=current_turn.game)
-        else:
-            turn = Turn(year=current_turn.year, season='fall',
-                        phase='diplomatic', game=current_turn.game)
-    elif current_turn.phase == 'retreat':
-        if current_turn.season == 'fall':
-            turn = Turn(year=current_turn.year, season='fall',
-                        phase='reinforcement', game=current_turn.game)
-        else:
-            turn = Turn(year=current_turn.year, season='fall',
-                        phase='diplomatic', game=current_turn.game)
-    elif current_turn.phase == 'reinforcement':
-        turn = Turn(year=current_turn.year + 1, season='spring',
-                    phase='diplomatic', game=current_turn.game)
-    turn.save()
-    return turn
-
-
-def update_territory_owners(game):
-    with open('game/data/territories.json') as territories_json:
-        territory_data = json.loads(territories_json.read())
-
-    for unit in game.units.filter(active=True):
-        water_terr = territory_data[
-            unit.territory.abbreviation
-        ]['type'] == 'water'
-        if unit.country != unit.territory.owner and not water_terr:
-            unit.territory.owner = unit.country
-            unit.territory.save()

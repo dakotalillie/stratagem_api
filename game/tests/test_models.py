@@ -6,23 +6,30 @@ from game import constants, models
 class GameTestCase(TestCase):
 
     def setUp(self):
-        player = models.Player(first_name="Dakota", last_name="Lillie",
-                               email="bewguy101@gmail.com")
-        player.set_password("helloworld")
-        player.save()
+        self.player = models.Player(first_name="Dakota", last_name="Lillie",
+                                    email="bewguy101@gmail.com")
+        self.player.set_password("helloworld")
+        self.player.save()
 
-        country_players = {country: player for country in
+        country_players = {country: self.player for country in
                            constants.COUNTRY_NAMES}
 
-        game = models.Game(title="New Game")
-        game.save(country_players=country_players)
+        self.game = models.Game(title="New Game")
+        self.game.save(country_players=country_players)
 
     def test_creating_game_instantiates_turn(self):
-        game = models.Game.objects.get(title="New Game")
-        turn = models.Turn.objects.get(game=game, year=1901, season="spring",
-                                       phase="diplomatic")
-        self.assertEqual(game.current_turn(), turn)
+        turn = models.Turn.objects.get(game=self.game, year=1901,
+                                       season="spring", phase="diplomatic")
+        self.assertEqual(self.game.current_turn(), turn)
 
     def test_creating_game_instantiates_countries(self):
-        game = models.Game.objects.get(title="New Game")
-        self.assertEqual(len(game.countries.all()), 7)
+        self.assertEqual(len(self.game.countries.all()), 7)
+
+    def test_creating_game_instantiates_countries_with_players(self):
+        self.assertEqual(self.game.countries.first().user, self.player)
+
+    def test_creating_game_instantiates_territories(self):
+        self.assertEqual(len(self.game.territories.all()), 75)
+
+    def test_creating_game_instantiates_units(self):
+        self.assertEqual(len(self.game.units.all()), 22)
