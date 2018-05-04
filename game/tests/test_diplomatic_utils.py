@@ -398,3 +398,29 @@ class AddSupportsTestCase(StratagemTest):
         du.add_supports(locations, supports, conflicts)
         with self.assertRaises(KeyError):
             print(locations[self.get_terr('Bur')])
+
+
+class CheckForIllegalSwapsTestCase(StratagemTest):
+    
+    def setUp(self):
+        super().setUp()
+        self.a_ven = self.get_unit_by_terr('Ven')
+        self.a_tri = self.get_unit_by_terr('Tri')
+        self.move(self.a_ven, 'Tri')
+        self.move(self.a_tri, 'Ven')
+
+    def test_returns_equally_powerful_units_to_origins(self):
+        locations, supports, conflicts = du.map_orders_to_locations(self.orders)
+        du.add_supports(locations, supports, conflicts)
+        du.check_for_illegal_swaps(self.orders, locations, conflicts)
+        self.assertDictEqual(locations[self.get_terr('Ven')], {self.a_ven: 1})
+        self.assertDictEqual(locations[self.get_terr('Tri')], {self.a_tri: 1})
+
+    def test_returns_only_less_powerful_unit_to_origin(self):
+        a_tyr = self.create_custom_unit('Tyr', 'army', 'Austria')
+        self.support(a_tyr, self.a_tri, 'move', 'Ven')
+        locations, supports, conflicts = du.map_orders_to_locations(self.orders)
+        du.add_supports(locations, supports, conflicts)
+        du.check_for_illegal_swaps(self.orders, locations, conflicts)
+        self.assertDictEqual(locations[self.get_terr('Ven')],
+                             {self.a_tri: 2, self.a_ven: 1})

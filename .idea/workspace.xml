@@ -19,8 +19,8 @@
           <file leaf-file-name="test_diplomatic_utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/game/tests/test_diplomatic_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1018">
-                  <caret line="400" lean-forward="true" selection-start-line="400" selection-end-line="400" />
+                <state relative-caret-position="518">
+                  <caret line="403" column="4" lean-forward="true" selection-start-line="403" selection-start-column="4" selection-end-line="403" selection-end-column="4" />
                   <folding>
                     <element signature="e#0#32#0" expanded="true" />
                   </folding>
@@ -35,8 +35,8 @@
           <file leaf-file-name="diplomatic_utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="423">
-                  <caret line="363" column="7" lean-forward="true" selection-start-line="363" selection-start-column="7" selection-end-line="363" selection-end-column="7" />
+                <state relative-caret-position="570">
+                  <caret line="395" column="17" lean-forward="true" selection-start-line="395" selection-start-column="17" selection-end-line="395" selection-end-column="17" />
                   <folding>
                     <element signature="e#7854#9956#0" />
                     <element signature="e#10053#10149#0" />
@@ -326,8 +326,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="423">
-          <caret line="363" column="7" lean-forward="true" selection-start-line="363" selection-start-column="7" selection-end-line="363" selection-end-column="7" />
+        <state relative-caret-position="570">
+          <caret line="395" column="17" lean-forward="true" selection-start-line="395" selection-start-column="17" selection-end-line="395" selection-end-column="17" />
           <folding>
             <element signature="e#7854#9956#0" />
             <element signature="e#10053#10149#0" />
@@ -337,8 +337,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/game/tests/test_diplomatic_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1018">
-          <caret line="400" lean-forward="true" selection-start-line="400" selection-end-line="400" />
+        <state relative-caret-position="518">
+          <caret line="403" column="4" lean-forward="true" selection-start-line="403" selection-start-column="4" selection-end-line="403" selection-end-column="4" />
           <folding>
             <element signature="e#0#32#0" expanded="true" />
           </folding>

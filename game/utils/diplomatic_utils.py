@@ -374,6 +374,17 @@ def add_supports(locations, supports, conflicts):
 
 
 def check_for_illegal_swaps(orders, locations, conflicts):
+    """
+    Iterates through orders to check for illegal swaps, which are moves
+    where two units of equal strength trade places without the use of a
+    convoy.
+    :param orders: a list of Order objects.
+    :param locations: a dict of units (and their associated strengths)
+           within each territory.
+    :param conflicts: a set containing the territories where conflicts
+           are occurring.
+    :return: None.
+    """
     for order in orders:
         # TODO: Find a more efficient way to do this.
         match = None
