@@ -1,49 +1,51 @@
 from game import models
 
 
-def process_retreat_turn(game, request_data):
-    orders = [create_retreat_order_from_data(data, game)
-              for unit_id, data in request_data['orders'].items()]
-    create_missing_delete_orders(game, orders)
+def process_retreat_turn(params):
+    """
+    The primary 'master' function which dictates how retreat turns
+    should be processed.
+    :param params: a dict with the following keys:
+        'game': the Game object,
+        'request_data': the data received from the frontend, with two
+        sub-keys, 'orders' and 'convoy_routes',
+        'retreat_phase_necessary': a boolean, which defaults to False.
+    :return: None.
+    """
+    orders = [create_retreat_order_from_data(data, params['game'])
+              for data in params['request_data']['orders'].values()]
+    create_missing_delete_orders(params['game'], orders)
     locations = handle_retreat_conflicts(orders)
     update_retreat_unit_locations(locations, orders)
 
 
-def create_retreat_order_from_data(data, game):
+def create_retreat_order_from_data(data, objects):
+    """
+    Transforms the dictionary data for an order received from the
+    frontend into an actual Order object.
+    :param data: a dict with the object's data.
+    :param objects: a dict with Game, Territory, and Unit objects.
+    :return: a newly created Order object.
+    """
+    order = None
     if data['order_type'] == 'move':
-        unit = models.Unit.objects.get(pk=data['unit_id'])
-        game = unit.game
-        origin = models.Territory.objects.get(
-            game=game,
-            abbreviation=data['origin']
-        )
-        destination = models.Territory.objects.get(
-            game=game,
-            abbreviation=data['destination']
-        )
-
         order = models.Order.objects.create(
-            turn=game.current_turn(),
-            unit=models.Unit.objects.get(pk=data['unit_id']),
+            turn=objects['game'].current_turn(),
+            unit=objects['units'][data['unit_id']],
             order_type='move',
-            origin=origin,
-            destination=destination,
+            origin=objects['territories'][data['origin']],
+            destination=objects['territories'][data['destination']],
             coast=data['coast'],
         )
 
     elif data['order_type'] == 'delete':
-        territory = game.territories.get(abbreviation=data['territory'])
-        unit = models.Unit.objects.get(pk=data['unit_id'])
-        unit.active = False
-        unit.retreating_from = None
-        unit.invaded_from = None
-        unit.save()
-
+        unit = objects['units'][data['unit_id']]
+        unit.deactivate()
         order = models.Order.objects.create(
-            turn=game.current_turn(),
+            turn=objects['game'].current_turn(),
             unit=unit,
             order_type='delete',
-            origin=territory
+            origin=objects['territories'][data['territory']]
         )
 
     return order

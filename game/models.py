@@ -156,6 +156,20 @@ class Unit(models.Model):
     def __str__(self):
         return "%s %s %s" % (self.country, self.unit_type, self.territory)
 
+    def displace(self, invaded_from):
+        self.retreating_from = self.territory
+        self.invaded_from = invaded_from
+        self.territory = None
+        self.save()
+
+    def deactivate(self):
+        self.territory = None
+        self.coast = ''
+        self.retreating_from = None
+        self.invaded_from = None
+        self.active = False
+        self.save()
+
 
 class Turn(models.Model):
     SEASONS = (

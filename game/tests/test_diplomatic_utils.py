@@ -1,90 +1,8 @@
-from django.test import TestCase
-from game import models
 from game.utils import diplomatic_utils as du
+from game.utils import test_utils as tu
 
 
-class StratagemTest(TestCase):
-    
-    def setUp(self):
-        game = models.Game(title="New Game")
-        game.save()
-        self.objects = {
-            'game': game,
-            'units': {u.id: u for u in game.units.filter(active=True)},
-            'territories': {t.abbreviation: t for t in
-                            game.territories.all()}
-        }
-        self.orders = []
-
-    def create_custom_unit(self, terr_abbr, unit_type, country_name):
-        new_unit = self.objects['game'].units.create(
-            territory=self.get_terr(terr_abbr),
-            unit_type=unit_type,
-            country=self.objects['game'].countries.get(name=country_name)
-        )
-        self.objects['units'][new_unit.id] = new_unit
-        return new_unit
-
-    def get_unit_by_terr(self, terr_abbr):
-        territory = self.get_terr(terr_abbr)
-        for unit in self.objects['units'].values():
-            if unit.territory == territory:
-                return unit
-
-    def get_terr(self, terr_abbr):
-        return self.objects['territories'][terr_abbr]
-
-    def hold(self, unit):
-        data = {
-            'unit_id': unit.id,
-            'order_type': 'hold',
-            'origin': unit.territory.abbreviation,
-            'destination': unit.territory.abbreviation,
-            'coast': unit.coast
-        }
-        self.orders.append(du.create_order_from_data(data, self.objects))
-
-    def move(self, unit, destination, coast='', via_convoy=False):
-        data = {
-            'unit_id': unit.id,
-            'order_type': 'move',
-            'origin': unit.territory.abbreviation,
-            'destination': destination,
-            'coast': coast,
-            'via_convoy': via_convoy
-        }
-        self.orders.append(du.create_order_from_data(data, self.objects))
-
-    def support(self, unit, aux_unit, aux_order_type, aux_destination):
-        data = {
-            'unit_id': unit.id,
-            'order_type': 'support',
-            'origin': unit.territory.abbreviation,
-            'destination': unit.territory.abbreviation,
-            'coast': unit.coast,
-            'aux_unit_id': aux_unit.id,
-            'aux_order_type': aux_order_type,
-            'aux_origin': aux_unit.territory.abbreviation,
-            'aux_destination': aux_destination
-        }
-        self.orders.append(du.create_order_from_data(data, self.objects))
-
-    def convoy(self, unit, aux_unit, aux_destination):
-        data = {
-            'unit_id': unit.id,
-            'order_type': 'convoy',
-            'origin': unit.territory.abbreviation,
-            'destination': unit.territory.abbreviation,
-            'coast': '',
-            'aux_unit_id': aux_unit.id,
-            'aux_order_type': 'move',
-            'aux_origin': aux_unit.territory.abbreviation,
-            'aux_destination': aux_destination
-        }
-        self.orders.append(du.create_order_from_data(data, self.objects))
-
-
-class CreateOrderFromDataTestCase(StratagemTest):
+class CreateOrderFromDataTestCase(tu.StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -98,14 +16,13 @@ class CreateOrderFromDataTestCase(StratagemTest):
         }
 
     def test_create_basic_move_order(self):
-        o = self.get_terr(self.data['origin'])
-        d = self.get_terr(self.data['destination'])
         order = du.create_order_from_data(self.data, self.objects)
         self.assertEqual(order.turn, self.objects['game'].current_turn())
-        self.assertEqual(order.unit, models.Unit.objects.get(pk=self.unit.id))
+        self.assertEqual(order.unit, self.unit)
         self.assertEqual(order.order_type, self.data['order_type'])
-        self.assertEqual(order.origin, o)
-        self.assertEqual(order.destination, d)
+        self.assertEqual(order.origin, self.get_terr(self.data['origin']))
+        self.assertEqual(order.destination,
+                         self.get_terr(self.data['destination']))
         self.assertEqual(order.coast, self.data['coast'])
         self.assertIsNone(order.aux_unit)
         self.assertEqual(order.aux_order_type, '')
@@ -114,7 +31,7 @@ class CreateOrderFromDataTestCase(StratagemTest):
         self.assertFalse(order.via_convoy)
 
 
-class CreateMissingHoldOrdersTestCase(StratagemTest):
+class CreateMissingHoldOrdersTestCase(tu.StratagemTest):
 
     def test_create_missing_hold_orders(self):
         orders = []
@@ -122,17 +39,17 @@ class CreateMissingHoldOrdersTestCase(StratagemTest):
         self.assertEqual(len(orders), len(self.objects['units']))
 
 
-class MapConvoyRouteToModelsTestCase(StratagemTest):
+class MapConvoyRouteToModelsTestCase(tu.StratagemTest):
 
     def setUp(self):
         super().setUp()
         self.unit = self.get_unit_by_terr('Lon')
-        self.eng_fleet = self.create_custom_unit('ENG', 'fleet', 'England')
+        self.f_eng = self.create_custom_unit('ENG', 'fleet', 'England')
         self.data = {
             'unit_id': self.unit.id,
             'origin': 'Lon',
             'destination': 'Bre',
-            'route': [{'id': self.eng_fleet.id}]
+            'route': [{'id': self.f_eng.id}]
         }
 
     def test_map_convoy_route_to_models(self):
@@ -140,56 +57,48 @@ class MapConvoyRouteToModelsTestCase(StratagemTest):
         self.assertEqual(mapped_data['unit'], self.unit)
         self.assertEqual(mapped_data['origin'], self.get_terr('Lon'))
         self.assertEqual(mapped_data['destination'], self.get_terr('Bre'))
-        self.assertIn(self.eng_fleet, mapped_data['route'])
+        self.assertIn(self.f_eng, mapped_data['route'])
 
 
-class MapOrdersToLocationsTestCase(StratagemTest):
+class MapOrdersToLocationsTestCase(tu.StratagemTest):
 
     def setUp(self):
         super().setUp()
         self.a_par = self.get_unit_by_terr('Par')
         self.a_mar = self.get_unit_by_terr('Mar')
         self.a_mun = self.get_unit_by_terr('Mun')
+
+    def test_map_orders_to_locations(self):
         self.move(self.a_par, 'Bur')
         self.support(self.a_mar, self.a_par, 'move', 'Bur')
         self.move(self.a_mun, 'Bur')
-
-    def test_map_orders_to_locations(self):
         locations, supports, conflicts = du.map_orders_to_locations(self.orders)
-        self.assertDictEqual(locations, {
-            self.get_terr('Bur'): {
-                self.a_par: 1,
-                self.a_mun: 1
-            },
-            self.get_terr('Mar'): {
-                self.a_mar: 1
-            }
-        })
+        self.assertDictEqual(locations[self.get_terr('Bur')], {self.a_par: 1,
+                                                               self.a_mun: 1})
+        self.assertDictEqual(locations[self.get_terr('Mar')], {self.a_mar: 1})
         support_orders = [x for x in self.orders if x.order_type == 'support']
         self.assertEqual(supports, support_orders)
         self.assertEqual(conflicts, {self.get_terr('Bur')})
 
 
-class ResolveConflictsInConvoyRouteTestCase(StratagemTest):
+class ResolveConflictsInConvoyRouteTestCase(tu.StratagemTest):
 
     def setUp(self):
         super().setUp()
-        self.f_TYS = self.create_custom_unit('TYS', 'fleet', 'France')
-        self.f_ION = self.create_custom_unit('ION', 'fleet', 'France')
-        self.a_Tun = self.create_custom_unit('Tun', 'army', 'France')
-        self.f_ADR = self.create_custom_unit('ADR', 'fleet', 'Italy')
-        self.f_Nap = self.get_unit_by_terr('Nap')
-
-        self.move(self.a_Tun, 'Nap', via_convoy=True)
-        self.convoy(self.f_ION, self.a_Tun, 'Nap')
-        self.move(self.f_ADR, 'ION')
-        self.support(self.f_Nap, self.f_ADR, 'move', 'ION')
-
+        self.f_tys = self.create_custom_unit('TYS', 'fleet', 'France')
+        self.f_ion = self.create_custom_unit('ION', 'fleet', 'France')
+        self.a_tun = self.create_custom_unit('Tun', 'army', 'France')
+        self.f_adr = self.create_custom_unit('ADR', 'fleet', 'Italy')
+        self.f_nap = self.get_unit_by_terr('Nap')
+        self.move(self.a_tun, 'Nap', via_convoy=True)
+        self.convoy(self.f_ion, self.a_tun, 'Nap')
+        self.move(self.f_adr, 'ION')
+        self.support(self.f_nap, self.f_adr, 'move', 'ION')
         self.convoy_route = {
-            'unit': self.a_Tun,
-            'origin': self.a_Tun.territory,
+            'unit': self.a_tun,
+            'origin': self.a_tun.territory,
             'destination': self.get_terr('Nap'),
-            'route': [self.f_ION]
+            'route': [self.f_ion]
         }
         self.displaced_units = []
 
@@ -213,9 +122,9 @@ class ResolveConflictsInConvoyRouteTestCase(StratagemTest):
         self.assertTrue(resolved)
         self.assertEqual(len(supports), 0)
         self.assertEqual(len(conflicts), 0)
-        self.assertIn(self.f_ION, self.displaced_units)
+        self.assertIn(self.f_ion, self.displaced_units)
         self.assertDictEqual(locations[self.get_terr('ION')],
-                             {self.f_ADR: 2})
+                             {self.f_adr: 2})
 
     def test_scenario_2(self):
         """
@@ -224,7 +133,7 @@ class ResolveConflictsInConvoyRouteTestCase(StratagemTest):
         resolved.
         """
 
-        self.convoy(self.f_TYS, self.a_Tun, 'Nap')
+        self.convoy(self.f_tys, self.a_tun, 'Nap')
         locations, supports, conflicts = du.map_orders_to_locations(self.orders)
         other_routes = True
         resolved = du.resolve_conflicts_in_convoy_route(self.convoy_route,
@@ -235,7 +144,7 @@ class ResolveConflictsInConvoyRouteTestCase(StratagemTest):
         self.assertFalse(resolved)
 
 
-class DetermineConvoyConflictOutcome(StratagemTest):
+class DetermineConvoyConflictOutcome(tu.StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -244,11 +153,9 @@ class DetermineConvoyConflictOutcome(StratagemTest):
         self.a_Tun = self.create_custom_unit('Tun', 'army', 'France')
         self.f_ADR = self.create_custom_unit('ADR', 'fleet', 'Italy')
         self.f_Nap = self.get_unit_by_terr('Nap')
-
         self.move(self.a_Tun, 'Nap', via_convoy=True)
         self.convoy(self.f_ION, self.a_Tun, 'Nap')
         self.move(self.f_ADR, 'ION')
-
         self.convoy_route = {
             'unit': self.a_Tun,
             'origin': self.a_Tun.territory,
@@ -292,19 +199,19 @@ class DetermineConvoyConflictOutcome(StratagemTest):
         self.assertEqual(len(supports), 1)
 
 
-class ReturnDefeatedUnitsToOriginsTestCase(StratagemTest):
+class ReturnDefeatedUnitsToOriginsTestCase(tu.StratagemTest):
 
     def setUp(self):
         super().setUp()
-        self.a_Par = self.get_unit_by_terr('Par')
-        self.a_Mun = self.get_unit_by_terr('Mun')
+        self.a_par = self.get_unit_by_terr('Par')
+        self.a_mun = self.get_unit_by_terr('Mun')
         self.conflict_location = self.get_terr('Bur')
         self.displaced_units = []
         self.conflicts = set([])
 
     def test_all_units_repelled(self):
-        self.move(self.a_Par, 'Bur')
-        self.move(self.a_Mun, 'Bur')
+        self.move(self.a_par, 'Bur')
+        self.move(self.a_mun, 'Bur')
         locations, supports, conflicts = du.map_orders_to_locations(self.orders)
         units_in_terr = locations[self.conflict_location]
         winner = None
@@ -313,52 +220,52 @@ class ReturnDefeatedUnitsToOriginsTestCase(StratagemTest):
                                             units_in_terr, winner, locations,
                                             conflicts, self.displaced_units)
         self.assertDictEqual(locations[self.conflict_location], {})
-        self.assertDictEqual(locations[self.get_terr('Par')], {self.a_Par: 1})
-        self.assertDictEqual(locations[self.get_terr('Mun')], {self.a_Mun: 1})
+        self.assertDictEqual(locations[self.get_terr('Par')], {self.a_par: 1})
+        self.assertDictEqual(locations[self.get_terr('Mun')], {self.a_mun: 1})
 
     def test_winner_not_repelled(self):
-        self.move(self.a_Par, 'Bur')
-        self.move(self.a_Mun, 'Bur')
+        self.move(self.a_par, 'Bur')
+        self.move(self.a_mun, 'Bur')
         locations, supports, conflicts = du.map_orders_to_locations(self.orders)
         units_in_terr = locations[self.conflict_location]
-        winner = self.a_Par
+        winner = self.a_par
 
         du.return_defeated_units_to_origins(self.conflict_location,
                                             units_in_terr, winner, locations,
                                             conflicts, self.displaced_units)
-        self.assertDictEqual(locations[self.conflict_location], {self.a_Par: 1})
-        self.assertDictEqual(locations[self.get_terr('Mun')], {self.a_Mun: 1})
+        self.assertDictEqual(locations[self.conflict_location], {self.a_par: 1})
+        self.assertDictEqual(locations[self.get_terr('Mun')], {self.a_mun: 1})
 
     def test_losing_defender_displaced(self):
-        self.a_Bur = self.create_custom_unit('Bur', 'army', 'France')
-        self.hold(self.a_Bur)
-        self.move(self.a_Mun, 'Bur')
+        a_bur = self.create_custom_unit('Bur', 'army', 'France')
+        self.hold(a_bur)
+        self.move(self.a_mun, 'Bur')
         locations, supports, conflicts = du.map_orders_to_locations(self.orders)
         units_in_terr = locations[self.conflict_location]
-        winner = self.a_Mun
+        winner = self.a_mun
 
         du.return_defeated_units_to_origins(self.conflict_location,
                                             units_in_terr, winner, locations,
                                             conflicts, self.displaced_units)
-        self.assertDictEqual(locations[self.conflict_location], {self.a_Mun: 1})
-        self.assertIn(self.a_Bur, self.displaced_units)
+        self.assertDictEqual(locations[self.conflict_location], {self.a_mun: 1})
+        self.assertIn(a_bur, self.displaced_units)
 
     def test_cannot_displace_own_unit(self):
-        self.a_Bur = self.create_custom_unit('Bur', 'army', 'France')
-        self.hold(self.a_Bur)
-        self.move(self.a_Par, 'Bur')
+        a_bur = self.create_custom_unit('Bur', 'army', 'France')
+        self.hold(a_bur)
+        self.move(self.a_par, 'Bur')
         locations, supports, conflicts = du.map_orders_to_locations(self.orders)
         units_in_terr = locations[self.conflict_location]
-        winner = self.a_Par
+        winner = self.a_par
         du.return_defeated_units_to_origins(self.conflict_location,
                                             units_in_terr, winner, locations,
                                             conflicts, self.displaced_units)
-        self.assertDictEqual(locations[self.conflict_location], {self.a_Bur: 1})
-        self.assertDictEqual(locations[self.get_terr('Par')], {self.a_Par: 1})
+        self.assertDictEqual(locations[self.conflict_location], {a_bur: 1})
+        self.assertDictEqual(locations[self.get_terr('Par')], {self.a_par: 1})
         self.assertEqual(len(self.displaced_units), 0)
 
 
-class ReturnUnitToOriginTestCase(StratagemTest):
+class ReturnUnitToOriginTestCase(tu.StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -378,29 +285,29 @@ class ReturnUnitToOriginTestCase(StratagemTest):
         self.assertIn(self.get_terr('Par'), conflicts)
 
 
-class AddSupportsTestCase(StratagemTest):
+class AddSupportsTestCase(tu.StratagemTest):
+
+    def setUp(self):
+        super().setUp()
+        self.a_par = self.get_unit_by_terr('Par')
+        self.a_mar = self.get_unit_by_terr('Mar')
+        self.support(self.a_mar, self.a_par, 'move', 'Bur')
 
     def test_adds_support_to_unit(self):
-        a_par = self.get_unit_by_terr('Par')
-        a_mar = self.get_unit_by_terr('Mar')
-        self.move(a_par, 'Bur')
-        self.support(a_mar, a_par, 'move', 'Bur')
+        self.move(self.a_par, 'Bur')
         locations, supports, conflicts = du.map_orders_to_locations(self.orders)
         du.add_supports(locations, supports, conflicts)
-        self.assertDictEqual(locations[self.get_terr('Bur')], {a_par: 2})
+        self.assertDictEqual(locations[self.get_terr('Bur')], {self.a_par: 2})
 
     def test_doesnt_add_support_to_nonexistent_order(self):
-        a_par = self.get_unit_by_terr('Par')
-        a_mar = self.get_unit_by_terr('Mar')
-        self.hold(a_par)
-        self.support(a_mar, a_par, 'move', 'Bur')
+        self.hold(self.a_par)
         locations, supports, conflicts = du.map_orders_to_locations(self.orders)
         du.add_supports(locations, supports, conflicts)
         with self.assertRaises(KeyError):
             print(locations[self.get_terr('Bur')])
 
 
-class CheckForIllegalSwapsTestCase(StratagemTest):
+class CheckForIllegalSwapsTestCase(tu.StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -426,7 +333,7 @@ class CheckForIllegalSwapsTestCase(StratagemTest):
                              {self.a_tri: 2, self.a_ven: 1})
 
 
-class ResolveConflictTestCase(StratagemTest):
+class ResolveConflictTestCase(tu.StratagemTest):
 
     def test_resolves_conflicts(self):
         conflict_location = self.get_terr('Bur')
@@ -448,7 +355,7 @@ class ResolveConflictTestCase(StratagemTest):
         self.assertDictEqual(locations[self.get_terr('Bel')], {a_bel: 1})
 
 
-class DetermineConflictOutcomeTestCase(StratagemTest):
+class DetermineConflictOutcomeTestCase(tu.StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -471,7 +378,7 @@ class DetermineConflictOutcomeTestCase(StratagemTest):
         self.assertIsNone(winner)
 
 
-class UpdateUnitLocations(StratagemTest):
+class UpdateUnitLocations(tu.StratagemTest):
 
     def test_unit_positions_get_updated(self):
         f_mao = self.create_custom_unit('MAO', 'fleet', 'England')
