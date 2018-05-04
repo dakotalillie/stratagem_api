@@ -1,20 +1,15 @@
 import json
 
 
-def update_turn(params):
+def update_turn(game, retreat_phase_necessary):
     """
     Handles the creation of a new turn, once processing of the current
     turn has been completed.
-    :param params: a dict with the following keys:
-        'game': the Game object,
-        'request_data': the data received from the frontend, with two
-        sub-keys, 'orders' and 'convoy_routes',
-        'retreat_phase_necessary': a boolean, which defaults to False.
+    :param game: a Game object.
+    :param retreat_phase_necessary: a boolean.
     :return: None.
     """
-    game = params['game']
-    create_new_turn(game, game.current_turn(),
-                    params['retreat_phase_necessary'])
+    create_new_turn(game, game.current_turn(), retreat_phase_necessary)
     if game.current_turn().phase == 'reinforcement':
         update_territory_owners(game)
 

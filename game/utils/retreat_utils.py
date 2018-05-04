@@ -1,25 +1,17 @@
 from game import models
 
 
-def process_retreat_turn(params):
+def process_retreat_turn(objects, request_data):
     """
     The primary 'master' function which dictates how retreat turns
     should be processed.
-    :param params: a dict with the following keys:
-        'game': the Game object,
-        'request_data': the data received from the frontend, with two
-        sub-keys, 'orders' and 'convoy_routes',
-        'retreat_phase_necessary': a boolean, which defaults to False.
+    :param objects: a dict containing objects from the ORM.
+    :param request_data: the data received from the frontend, with two
+           sub-keys, 'orders' and 'convoy_routes'.
     :return: None.
     """
-    objects = {
-        'game': params['game'],
-        'units': {u.id: u for u in params['game'].units.filter(active=True)},
-        'territories': {t.abbreviation: t for t in
-                        params['game'].territories.all()}
-    }
     orders = [create_retreat_order_from_data(data, objects)
-              for data in params['request_data']['orders'].values()]
+              for data in request_data['orders'].values()]
     create_missing_delete_orders(orders, objects)
     locations = handle_retreat_conflicts(orders)
     update_retreat_unit_locations(locations, orders)

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from . import models
 from . import serializers
-from .utils import diplomatic_utils
+from .utils import diplomatic_utils as du
 from .utils import reinforcement_utils
 from .utils import retreat_utils
 from .utils import update_turn_utils
@@ -95,21 +95,32 @@ class OrderList(APIView):
 
     permission_classes = (permissions.IsAuthenticated,)
 
+    def get_game(self, pk):
+        try:
+            return models.Game.objects.get(pk=pk)
+        except models.Game.DoesNotExist:
+            raise Http404
+
     def post(self, request, pk):
-        params = {
-            'game':                    models.Game.objects.get(pk=pk),
-            'request_data':            request.data,
-            'retreat_phase_necessary': False
+        game = self.get_game(pk)
+        retreat_phase_necessary = False
+        objects = {
+            'game': game,
+            'units': {str(u.id): u for u in game.units.filter(active=True)},
+            'territories': {t.abbreviation: t for t in game.territories.all()},
+            'countries': {c.name: c for c in game.countries.all()}
         }
-        if params['game'].current_turn().phase == 'diplomatic':
-            diplomatic_utils.process_diplomatic_turn(params)
-        elif params['game'].current_turn().phase == 'retreat':
-            retreat_utils.process_retreat_turn(params)
-        elif params['game'].current_turn().phase == 'reinforcement':
-            reinforcement_utils.process_reinforcement_turn(params)
-        update_turn_utils.update_turn(params)
-        serializer = serializers.GameDetailSerializer(params['game'])
+        if game.current_turn().phase == 'diplomatic':
+            retreat_phase_necessary = du.process_diplomatic_turn(objects,
+                                                                 request.data)
+        elif game.current_turn().phase == 'retreat':
+            retreat_utils.process_retreat_turn(objects, request.data)
+        elif game.current_turn().phase == 'reinforcement':
+            reinforcement_utils.process_reinforcement_turn(objects,
+                                                           request.data)
+        update_turn_utils.update_turn(game, retreat_phase_necessary)
+        serializer = serializers.GameDetailSerializer(game)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def delete(self, request, pk, format=None):
+    def delete(self, request, pk):
         pass

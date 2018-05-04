@@ -1,28 +1,21 @@
 from game import models
 
 
-def process_diplomatic_turn(params):
+def process_diplomatic_turn(objects, request_data):
     """
     The primary 'master' function which dictates how diplomatic turns
     should be processed.
-    :param params: a dict with the following keys:
-        'game': the Game object,
-        'request_data': the data received from the frontend, with two
-        sub-keys, 'orders' and 'convoy_routes',
-        'retreat_phase_necessary': a boolean, which defaults to False.
-    :return: None.
+    :param objects: a dict containing objects from the ORM.
+    :param request_data: the data received from the frontend, with two
+           sub-keys, 'orders' and 'convoy_routes'.
+    :return: a boolean, which indicates whether or not a retreat phase
+             is necessary.
     """
-    objects = {
-        'game': params['game'],
-        'units': {u.id: u for u in params['game'].units.filter(active=True)},
-        'territories': {t.abbreviation: t for t in
-                        params['game'].territories.all()}
-    }
     orders = [create_order_from_data(data, objects)
-              for data in params['request_data']['orders'].values()]
+              for data in request_data['orders'].values()]
     create_missing_hold_orders(orders, objects)
     convoy_routes = [map_convoy_route_to_models(route, objects)
-                     for route in params['request_data']['convoy_routes']]
+                     for route in request_data['convoy_routes']]
     locations, supports, conflicts = map_orders_to_locations(orders)
     displaced_units = []
     # Convoy routes need to be resolved first, because if there's a unit
@@ -46,7 +39,7 @@ def process_diplomatic_turn(params):
                          displaced_units)
 
     update_unit_locations(locations, displaced_units, orders)
-    params['retreat_phase_necessary'] = len(displaced_units) > 0
+    return len(displaced_units) > 0
 
 
 def create_order_from_data(data, objects):
