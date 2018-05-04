@@ -449,7 +449,7 @@ def determine_conflict_outcome(defender, units_in_terr):
 
 def update_unit_locations(locations, displaced_units, orders):
     """
-    Remaps attributes of Unit objects according to their new locations.
+    Remaps locations of Unit objects.
     :param locations: a dict of units (and their associated strengths)
            within each territory.
     :param displaced_units: a list of displaced units.

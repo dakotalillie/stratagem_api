@@ -51,25 +51,35 @@ def create_retreat_order_from_data(data, objects):
     return order
 
 
-def create_missing_delete_orders(game, orders):
-    game_units = set(game.units.filter(territory=None, active=True))
+def create_missing_delete_orders(orders, objects):
+    """
+    Creates delete orders for all of the game's units which are both
+    active and displaced and which weren't explicitly given orders by
+    the player(s).
+    :param orders: a list of Order objects.
+    :param objects: a dict with Game, Territory, and Unit objects.
+    :return: None. Modifies orders.
+    """
+    game_units = set(objects['game'].units.filter(territory=None, active=True))
     for order in orders:
         game_units.discard(order.unit)
     for unit in game_units:
-        models.Order.objects.create(
-            turn=game.current_turn(),
+        orders.append(models.Order.objects.create(
+            turn=objects['game'].current_turn(),
             unit=unit,
             order_type='delete',
             origin=unit.retreating_from
-        )
-
-        unit.active = False
-        unit.retreating_from = None
-        unit.invaded_from = None
-        unit.save()
+        ))
+        unit.deactivate()
 
 
 def handle_retreat_conflicts(orders):
+    """
+    Checks for situations where two or more units are retreating to the
+    same territory. In these cases, all involved units are deactivated.
+    :param orders: a list of Order objects
+    :return: a dict of the Units' new locations.
+    """
     locations = {}
     conflicts = set([])
     for order in orders:
@@ -81,29 +91,23 @@ def handle_retreat_conflicts(orders):
             conflicts.add(order.destination)
     for conflict_location in conflicts:
         for unit in locations[conflict_location]:
-            unit.active = False
-            unit.retreating_from = None
-            unit.invaded_from = None
-            unit.save()
+            unit.deactivate()
         locations.pop(conflict_location)
-
     return locations
 
 
 def update_retreat_unit_locations(locations, orders):
+    """
+    Remaps locations of Unit objects.
+    :param locations: a dict of territories and their occupying units.
+    :param orders: a list of Order objects.
+    :return: None.
+    """
+    mapped_orders = {order.unit: order for order in orders}
     for territory, unit_list in locations.items():
-        # Since at this point the unit dictionary will have only one
-        # entry, the run time of this is not as bad as it looks.
         unit = unit_list[0]
-        coast = unit.coast
-        for order in orders:
-            if order.unit == unit and order.destination == territory:
-                coast = order.coast
-                break
-            elif order.unit == unit:
-                break
         unit.territory = territory
-        unit.coast = coast
+        unit.coast = mapped_orders[unit].coast
         unit.retreating_from = None
         unit.invaded_from = None
         unit.save()

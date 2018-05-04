@@ -1,6 +1,7 @@
 from django.test import TestCase
 from game import models
 from . import diplomatic_utils as du
+from . import retreat_utils as rtu
 
 
 class StratagemTest(TestCase):
@@ -54,6 +55,17 @@ class StratagemTest(TestCase):
             'via_convoy': via_convoy
         }
         self.orders.append(du.create_order_from_data(data, self.objects))
+
+    def move_displaced(self, unit, destination, coast=''):
+        data = {
+            'unit_id': unit.id,
+            'order_type': 'move',
+            'origin': unit.retreating_from.abbreviation,
+            'destination': destination,
+            'coast': coast,
+        }
+        self.orders.append(rtu.create_retreat_order_from_data(data,
+                                                              self.objects))
 
     def support(self, unit, aux_unit, aux_order_type, aux_destination):
         data = {
