@@ -13,7 +13,8 @@ class StratagemTest(TestCase):
             'game': game,
             'units': {u.id: u for u in game.units.filter(active=True)},
             'territories': {t.abbreviation: t for t in
-                            game.territories.all()}
+                            game.territories.all()},
+            'countries': {c.name: c for c in game.countries.all()}
         }
         self.orders = []
 

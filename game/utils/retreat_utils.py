@@ -12,9 +12,15 @@ def process_retreat_turn(params):
         'retreat_phase_necessary': a boolean, which defaults to False.
     :return: None.
     """
-    orders = [create_retreat_order_from_data(data, params['game'])
+    objects = {
+        'game': params['game'],
+        'units': {u.id: u for u in params['game'].units.filter(active=True)},
+        'territories': {t.abbreviation: t for t in
+                        params['game'].territories.all()}
+    }
+    orders = [create_retreat_order_from_data(data, objects)
               for data in params['request_data']['orders'].values()]
-    create_missing_delete_orders(params['game'], orders)
+    create_missing_delete_orders(orders, objects)
     locations = handle_retreat_conflicts(orders)
     update_retreat_unit_locations(locations, orders)
 
