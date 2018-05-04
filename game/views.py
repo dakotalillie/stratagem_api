@@ -28,7 +28,7 @@ class UserList(APIView):
 
     permission_classes = (permissions.AllowAny,)
 
-    def post(self, request, format=None):
+    def post(self, request):
         serializer = serializers.UserSerializerWithToken(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -43,7 +43,7 @@ class Sandbox(APIView):
 
     permission_classes = (permissions.IsAuthenticated,)
 
-    def post(self, request, format=None):
+    def post(self, request):
         country_players = {country: request.user for country in
                            constants.COUNTRY_NAMES}
         game = models.Game(title='New Sandbox')
@@ -76,7 +76,7 @@ class GameDetail(APIView):
         except models.Game.DoesNotExist:
             raise Http404
 
-    def get(self, request, pk, format=None):
+    def get(self, request, pk):
         game = self.get_object(pk)
         serializer = serializers.GameDetailSerializer(game)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -95,7 +95,7 @@ class OrderList(APIView):
 
     permission_classes = (permissions.IsAuthenticated,)
 
-    def post(self, request, pk, format=None):
+    def post(self, request, pk):
         params = {
             'game':                    models.Game.objects.get(pk=pk),
             'request_data':            request.data,

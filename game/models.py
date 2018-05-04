@@ -188,6 +188,8 @@ class Turn(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='turns')
     created_at = models.DateTimeField(auto_now_add=True)
+    # Necessary to avoid unresolved references in PyCharm.
+    objects = models.Manager()
 
     def __str__(self):
         return "%s %s %s" % (self.phase, self.season, self.year)
