@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="005c76ed-9542-4649-942b-fae5327fbc3f" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/game/tests/test_diplomatic_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/tests/test_diplomatic_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/game/utils/diplomatic_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/utils/diplomatic_utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -19,8 +18,8 @@
           <file leaf-file-name="test_diplomatic_utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/game/tests/test_diplomatic_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="938">
-                  <caret line="488" column="42" lean-forward="true" selection-start-line="488" selection-start-column="42" selection-end-line="488" selection-end-column="42" />
+                <state relative-caret-position="-7059">
+                  <caret line="32" lean-forward="true" selection-start-line="32" selection-end-line="32" />
                   <folding>
                     <element signature="e#0#32#0" expanded="true" />
                   </folding>
@@ -35,8 +34,8 @@
           <file leaf-file-name="diplomatic_utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="838">
-                  <caret line="478" column="21" lean-forward="true" selection-start-line="478" selection-start-column="21" selection-end-line="478" selection-end-column="21" />
+                <state relative-caret-position="872">
+                  <caret line="476" column="32" selection-start-line="476" selection-start-column="32" selection-end-line="476" selection-end-column="32" />
                   <folding>
                     <element signature="e#7854#9956#0" />
                     <element signature="e#10053#10149#0" />
@@ -339,8 +338,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/game/tests/test_diplomatic_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="938">
-          <caret line="488" column="42" lean-forward="true" selection-start-line="488" selection-start-column="42" selection-end-line="488" selection-end-column="42" />
+        <state relative-caret-position="-7059">
+          <caret line="32" lean-forward="true" selection-start-line="32" selection-end-line="32" />
           <folding>
             <element signature="e#0#32#0" expanded="true" />
           </folding>
@@ -349,8 +348,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="838">
-          <caret line="478" column="21" lean-forward="true" selection-start-line="478" selection-start-column="21" selection-end-line="478" selection-end-column="21" />
+        <state relative-caret-position="872">
+          <caret line="476" column="32" selection-start-line="476" selection-start-column="32" selection-end-line="476" selection-end-column="32" />
           <folding>
             <element signature="e#7854#9956#0" />
             <element signature="e#10053#10149#0" />

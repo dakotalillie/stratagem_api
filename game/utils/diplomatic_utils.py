@@ -470,15 +470,13 @@ def update_unit_locations(locations, displaced_units, orders):
         unit.territory = None
         unit.save()
     # Then, map units' territories to their new locations.
+    orders_mapped_by_unit = {order.unit: order for order in orders}
     for territory, unit_dict in locations.items():
         unit = list(unit_dict.keys())[0]
         coast = unit.coast
-        for order in orders:
-            if order.unit == unit and order.destination == territory:
-                coast = order.coast
-                break
-            elif order.unit == unit:
-                break
+        order = orders_mapped_by_unit[unit]
+        if order.destination == territory:
+            coast = order.coast
         unit.territory = territory
         unit.coast = coast
         unit.save()
