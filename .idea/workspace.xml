@@ -19,8 +19,8 @@
           <file leaf-file-name="test_diplomatic_utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/game/tests/test_diplomatic_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="518">
-                  <caret line="403" column="4" lean-forward="true" selection-start-line="403" selection-start-column="4" selection-end-line="403" selection-end-column="4" />
+                <state relative-caret-position="938">
+                  <caret line="488" column="42" lean-forward="true" selection-start-line="488" selection-start-column="42" selection-end-line="488" selection-end-column="42" />
                   <folding>
                     <element signature="e#0#32#0" expanded="true" />
                   </folding>
@@ -35,8 +35,8 @@
           <file leaf-file-name="diplomatic_utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="570">
-                  <caret line="395" column="17" lean-forward="true" selection-start-line="395" selection-start-column="17" selection-end-line="395" selection-end-column="17" />
+                <state relative-caret-position="838">
+                  <caret line="478" column="21" lean-forward="true" selection-start-line="478" selection-start-column="21" selection-end-line="478" selection-end-column="21" />
                   <folding>
                     <element signature="e#7854#9956#0" />
                     <element signature="e#10053#10149#0" />
@@ -70,6 +70,12 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>BasicStratagemTest</find>
+      <find>conflict_location</find>
+      <find>displaced_units</find>
+      <find>defender</find>
+      <find>:param locations:</find>
+      <find>:param displaced_units:</find>
+      <find>:param orders:</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -85,8 +91,8 @@
         <option value="$PROJECT_DIR$/Pipfile" />
         <option value="$PROJECT_DIR$/game/views.py" />
         <option value="$PROJECT_DIR$/game/utils/scenarios.py" />
-        <option value="$PROJECT_DIR$/game/utils/diplomatic_utils.py" />
         <option value="$PROJECT_DIR$/game/tests/test_diplomatic_utils.py" />
+        <option value="$PROJECT_DIR$/game/utils/diplomatic_utils.py" />
       </list>
     </option>
   </component>
@@ -175,7 +181,7 @@
     <frame x="0" y="0" width="1920" height="1200" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.13375461" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13375461" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32977778" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.30844444" />
@@ -324,23 +330,30 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
+    <entry file="file:///Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/unittest/case.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="570">
-          <caret line="395" column="17" lean-forward="true" selection-start-line="395" selection-start-column="17" selection-end-line="395" selection-end-column="17" />
-          <folding>
-            <element signature="e#7854#9956#0" />
-            <element signature="e#10053#10149#0" />
-          </folding>
+        <state relative-caret-position="362">
+          <caret line="442" column="8" selection-start-line="442" selection-start-column="8" selection-end-line="442" selection-end-column="8" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/game/tests/test_diplomatic_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="518">
-          <caret line="403" column="4" lean-forward="true" selection-start-line="403" selection-start-column="4" selection-end-line="403" selection-end-column="4" />
+        <state relative-caret-position="938">
+          <caret line="488" column="42" lean-forward="true" selection-start-line="488" selection-start-column="42" selection-end-line="488" selection-end-column="42" />
           <folding>
             <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/game/utils/diplomatic_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="838">
+          <caret line="478" column="21" lean-forward="true" selection-start-line="478" selection-start-column="21" selection-end-line="478" selection-end-column="21" />
+          <folding>
+            <element signature="e#7854#9956#0" />
+            <element signature="e#10053#10149#0" />
           </folding>
         </state>
       </provider>

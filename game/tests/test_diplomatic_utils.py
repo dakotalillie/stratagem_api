@@ -401,7 +401,7 @@ class AddSupportsTestCase(StratagemTest):
 
 
 class CheckForIllegalSwapsTestCase(StratagemTest):
-    
+
     def setUp(self):
         super().setUp()
         self.a_ven = self.get_unit_by_terr('Ven')
@@ -424,3 +424,67 @@ class CheckForIllegalSwapsTestCase(StratagemTest):
         du.check_for_illegal_swaps(self.orders, locations, conflicts)
         self.assertDictEqual(locations[self.get_terr('Ven')],
                              {self.a_tri: 2, self.a_ven: 1})
+
+
+class ResolveConflictTestCase(StratagemTest):
+
+    def test_resolves_conflicts(self):
+        conflict_location = self.get_terr('Bur')
+        a_par = self.get_unit_by_terr('Par')
+        a_mar = self.get_unit_by_terr('Mar')
+        a_mun = self.get_unit_by_terr('Mun')
+        a_bel = self.create_custom_unit('Bel', 'army', 'Germany')
+        self.move(a_par, 'Bur')
+        self.support(a_mar, a_par, 'move', 'Bur')
+        self.move(a_mun, 'Bur')
+        self.support(a_bel, a_mun, 'move', 'Bur')
+        locations, supports, conflicts = du.map_orders_to_locations(self.orders)
+        du.add_supports(locations, supports, conflicts)
+        du.resolve_conflict(conflict_location, locations, conflicts,
+                            displaced_units=[])
+        self.assertDictEqual(locations[self.get_terr('Par')], {a_par: 1})
+        self.assertDictEqual(locations[self.get_terr('Mar')], {a_mar: 1})
+        self.assertDictEqual(locations[self.get_terr('Mun')], {a_mun: 1})
+        self.assertDictEqual(locations[self.get_terr('Bel')], {a_bel: 1})
+
+
+class DetermineConflictOutcomeTestCase(StratagemTest):
+
+    def setUp(self):
+        super().setUp()
+        self.f_tri = self.get_unit_by_terr('Tri')
+        self.a_ven = self.get_unit_by_terr('Ven')
+
+    def test_winner_is_defender(self):
+        units_in_terr = {self.f_tri: 1, self.a_ven: 1}
+        winner = du.determine_conflict_outcome(self.a_ven, units_in_terr)
+        self.assertEqual(winner, self.a_ven)
+
+    def test_winner_is_not_defender(self):
+        units_in_terr = {self.f_tri: 2, self.a_ven: 1}
+        winner = du.determine_conflict_outcome(self.a_ven, units_in_terr)
+        self.assertEqual(winner, self.f_tri)
+
+    def test_no_winner(self):
+        units_in_terr = {self.f_tri: 1, self.a_ven: 1}
+        winner = du.determine_conflict_outcome(None, units_in_terr)
+        self.assertIsNone(winner)
+
+
+class UpdateUnitLocations(StratagemTest):
+
+    def test_unit_positions_get_updated(self):
+        f_mao = self.create_custom_unit('MAO', 'fleet', 'England')
+        a_spa = self.create_custom_unit('Spa', 'army', 'England')
+        a_gas = self.create_custom_unit('Gas', 'army', 'France')
+        self.move(a_spa, 'Gas')
+        self.move(f_mao, 'Spa', coast='NC')
+        locations = {self.get_terr('Gas'): {a_spa: 2},
+                     self.get_terr('Spa'): {f_mao: 1}}
+        displaced_units = [a_gas]
+        du.update_unit_locations(locations, displaced_units, self.orders)
+        self.assertEqual(f_mao.territory, self.get_terr('Spa'))
+        self.assertEqual(f_mao.coast, 'NC')
+        self.assertEqual(a_spa.territory, self.get_terr('Gas'))
+        self.assertIsNone(a_gas.territory)
+        self.assertEqual(a_gas.retreating_from, self.get_terr('Gas'))

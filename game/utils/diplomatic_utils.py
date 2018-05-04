@@ -385,31 +385,37 @@ def check_for_illegal_swaps(orders, locations, conflicts):
            are occurring.
     :return: None.
     """
-    for order in orders:
-        # TODO: Find a more efficient way to do this.
-        match = None
-        for other_order in orders:
-            if (other_order.destination == order.origin and
-                    order.destination == other_order.origin and
-                    order.id != other_order.id):
-                match = other_order
-        if match:
+    mapped_orders = {order.origin: order for order in orders}
+    for order in mapped_orders.values():
+        d_order = mapped_orders.get(order.destination)
+        if d_order and d_order.destination == order.origin:
             unit_in_location = order.unit in locations[order.destination]
-            match_in_location = (match.unit in locations[match.destination])
+            d_unit_in_location = d_order.unit in locations[d_order.destination]
             # Check if matter hasn't already resolved
-            if ((unit_in_location and match_in_location) and not
-                    (order.via_convoy or match.via_convoy)):
+            if ((unit_in_location and d_unit_in_location) and not
+                    (order.via_convoy or d_order.via_convoy)):
                 unit_strength = locations[order.destination][order.unit]
-                match_strength = locations[match.destination][match.unit]
+                match_strength = locations[d_order.destination][d_order.unit]
                 if unit_strength >= match_strength:
-                    locations[match.destination].pop(match.unit)
-                    return_unit_to_origin(match.unit, locations, conflicts)
+                    locations[d_order.destination].pop(d_order.unit)
+                    return_unit_to_origin(d_order.unit, locations, conflicts)
                 if unit_strength <= match_strength:
                     locations[order.destination].pop(order.unit)
                     return_unit_to_origin(order.unit, locations, conflicts)
 
 
 def resolve_conflict(conflict_location, locations, conflicts, displaced_units):
+    """
+    Resolves a conflict, determining the outcome and returning any
+    defeated units to their original territories.
+    :param conflict_location: a Territory object.
+    :param locations: a dict of units (and their associated strengths)
+           within each territory.
+    :param conflicts: a set containing the territories where conflicts
+           are occurring.
+    :param displaced_units: a list of displaced units.
+    :return:
+    """
     units_in_terr = locations[conflict_location]
     defender = None
     for unit in units_in_terr:
@@ -422,6 +428,13 @@ def resolve_conflict(conflict_location, locations, conflicts, displaced_units):
 
 
 def determine_conflict_outcome(defender, units_in_terr):
+    """
+    Determines which unit wins a conflict, or if there is no winner.
+    :param defender: the Unit being attacked, if there is one.
+    :param units_in_terr: a dict of the Units in the current territory,
+           along with their respective strengths.
+    :return: the victorious Unit object, or None if there is no winner.
+    """
     max_unit = max(units_in_terr, key=units_in_terr.get)
     max_strength = units_in_terr[max_unit]
     standoff = False
@@ -435,30 +448,37 @@ def determine_conflict_outcome(defender, units_in_terr):
 
 
 def update_unit_locations(locations, displaced_units, orders):
+    """
+    Remaps attributes of Unit objects according to their new locations.
+    :param locations: a dict of units (and their associated strengths)
+           within each territory.
+    :param displaced_units: a list of displaced units.
+    :param orders: a list of Order objects.
+    :return: None.
+    """
     # Handle displaced units.
     for unit in displaced_units:
         unit.retreating_from = unit.territory
         unit.territory = None
         unit.save()
-    # First, set all unit territories to None so they can be freshly
-    # remapped. Maybe would be better to do topological sort?
-    for territory, unit_dict in locations.items():
-        for unit in unit_dict:
-            unit.territory = None
-            unit.save()
+    # Set unit territories to None, to avoid issues with one-to-one
+    # field in the model. Would be nice to do topological sort to avoid
+    # too many database calls, but unfortunately the graph of moves may
+    # be cyclic
+    for unit_dict in locations.values():
+        unit = list(unit_dict.keys())[0]
+        unit.territory = None
+        unit.save()
     # Then, map units' territories to their new locations.
     for territory, unit_dict in locations.items():
-        # Since at this point the unit dictionary will have only one
-        # entry, the run time of this is not as bad as it looks.
-        for unit in unit_dict:
-            # TODO: this is a temporary fix. restructure data later.
-            coast = unit.coast
-            for order in orders:
-                if order.unit == unit and order.destination == territory:
-                    coast = order.coast
-                    break
-                elif order.unit == unit:
-                    break
-            unit.territory = territory
-            unit.coast = coast
-            unit.save()
+        unit = list(unit_dict.keys())[0]
+        coast = unit.coast
+        for order in orders:
+            if order.unit == unit and order.destination == territory:
+                coast = order.coast
+                break
+            elif order.unit == unit:
+                break
+        unit.territory = territory
+        unit.coast = coast
+        unit.save()
