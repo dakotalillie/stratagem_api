@@ -301,6 +301,22 @@ def determine_convoy_conflict_outcome(convoy_route, defender, units_in_terr,
 
 def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
                                      locations, conflicts, displaced_units):
+    """
+    Returns non-victorious units to their original locations. If a
+    defeated unit's origin is the conflict location, that unit becomes
+    displaced, unless the displacing unit is from the same country (in
+    which case, the victorious unit is returned to its original
+    location).
+    :param conflict_location: a Territory object.
+    :param units_in_terr: a dict of all the units in the territory.
+    :param winner: the victorious Unit object.
+    :param locations: a dict of units (and their associated strengths)
+           within each territory.
+    :param conflicts: a set containing the territories where conflicts
+           are occurring.
+    :param displaced_units: a list of displaced units.
+    :return: None.
+    """
     units_to_move = [unit for unit in units_in_terr if unit != winner]
 
     for unit in units_to_move:
