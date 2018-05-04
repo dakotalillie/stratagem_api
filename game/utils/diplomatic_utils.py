@@ -335,6 +335,15 @@ def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
 
 
 def return_unit_to_origin(unit, locations, conflicts):
+    """
+    Returns a unit to its original territory.
+    :param unit: a Unit object representing the unit to be returned.
+    :param locations: a dict of units (and their associated strengths)
+           within each territory.
+    :param conflicts: a set containing the territories where conflicts
+           are occurring.
+    :return: None.
+    """
     if unit.territory not in locations:
         locations[unit.territory] = {unit: 1}
     else:
@@ -343,6 +352,16 @@ def return_unit_to_origin(unit, locations, conflicts):
 
 
 def add_supports(locations, supports, conflicts):
+    """
+    Goes through the orders in the supports list and increases the
+    strength values of the units in the locations dict.
+    :param locations: a dict of units (and their associated strengths)
+           within each territory.
+    :param supports: supports: a list of support orders.
+    :param conflicts: a set containing the territories where conflicts
+           are occurring.
+    :return: None.
+    """
     for order in supports:
         # Check to make sure the supported action is actually being
         # performed.

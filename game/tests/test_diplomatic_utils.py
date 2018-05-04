@@ -3,7 +3,7 @@ from game import models
 from game.utils import diplomatic_utils as du
 
 
-class BasicStratagemTest(TestCase):
+class StratagemTest(TestCase):
     
     def setUp(self):
         game = models.Game(title="New Game")
@@ -84,7 +84,7 @@ class BasicStratagemTest(TestCase):
         self.orders.append(du.create_order_from_data(data, self.objects))
 
 
-class CreateOrderFromDataTestCase(BasicStratagemTest):
+class CreateOrderFromDataTestCase(StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -114,7 +114,7 @@ class CreateOrderFromDataTestCase(BasicStratagemTest):
         self.assertFalse(order.via_convoy)
 
 
-class CreateMissingHoldOrdersTestCase(BasicStratagemTest):
+class CreateMissingHoldOrdersTestCase(StratagemTest):
 
     def test_create_missing_hold_orders(self):
         orders = []
@@ -122,7 +122,7 @@ class CreateMissingHoldOrdersTestCase(BasicStratagemTest):
         self.assertEqual(len(orders), len(self.objects['units']))
 
 
-class MapConvoyRouteToModelsTestCase(BasicStratagemTest):
+class MapConvoyRouteToModelsTestCase(StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -143,7 +143,7 @@ class MapConvoyRouteToModelsTestCase(BasicStratagemTest):
         self.assertIn(self.eng_fleet, mapped_data['route'])
 
 
-class MapOrdersToLocationsTestCase(BasicStratagemTest):
+class MapOrdersToLocationsTestCase(StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -170,7 +170,7 @@ class MapOrdersToLocationsTestCase(BasicStratagemTest):
         self.assertEqual(conflicts, {self.get_terr('Bur')})
 
 
-class ResolveConflictsInConvoyRouteTestCase(BasicStratagemTest):
+class ResolveConflictsInConvoyRouteTestCase(StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -235,7 +235,7 @@ class ResolveConflictsInConvoyRouteTestCase(BasicStratagemTest):
         self.assertFalse(resolved)
 
 
-class DetermineConvoyConflictOutcome(BasicStratagemTest):
+class DetermineConvoyConflictOutcome(StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -292,7 +292,7 @@ class DetermineConvoyConflictOutcome(BasicStratagemTest):
         self.assertEqual(len(supports), 1)
 
 
-class ReturnDefeatedUnitsToOriginsTestCase(BasicStratagemTest):
+class ReturnDefeatedUnitsToOriginsTestCase(StratagemTest):
 
     def setUp(self):
         super().setUp()
@@ -356,3 +356,45 @@ class ReturnDefeatedUnitsToOriginsTestCase(BasicStratagemTest):
         self.assertDictEqual(locations[self.conflict_location], {self.a_Bur: 1})
         self.assertDictEqual(locations[self.get_terr('Par')], {self.a_Par: 1})
         self.assertEqual(len(self.displaced_units), 0)
+
+
+class ReturnUnitToOriginTestCase(StratagemTest):
+
+    def setUp(self):
+        super().setUp()
+        self.a_par = self.get_unit_by_terr('Par')
+        self.move(self.a_par, 'Bur')
+
+    def test_unit_gets_returned_to_origin(self):
+        locations, _, conflicts = du.map_orders_to_locations(self.orders)
+        du.return_unit_to_origin(self.a_par, locations, conflicts)
+        self.assertDictEqual(locations[self.get_terr('Par')], {self.a_par: 1})
+
+    def test_can_add_unit_origin_to_conflicts(self):
+        a_gas = self.create_custom_unit('Gas', 'army', 'France')
+        self.move(a_gas, 'Par')
+        locations, _, conflicts = du.map_orders_to_locations(self.orders)
+        du.return_unit_to_origin(self.a_par, locations, conflicts)
+        self.assertIn(self.get_terr('Par'), conflicts)
+
+
+class AddSupportsTestCase(StratagemTest):
+
+    def test_adds_support_to_unit(self):
+        a_par = self.get_unit_by_terr('Par')
+        a_mar = self.get_unit_by_terr('Mar')
+        self.move(a_par, 'Bur')
+        self.support(a_mar, a_par, 'move', 'Bur')
+        locations, supports, conflicts = du.map_orders_to_locations(self.orders)
+        du.add_supports(locations, supports, conflicts)
+        self.assertDictEqual(locations[self.get_terr('Bur')], {a_par: 2})
+
+    def test_doesnt_add_support_to_nonexistent_order(self):
+        a_par = self.get_unit_by_terr('Par')
+        a_mar = self.get_unit_by_terr('Mar')
+        self.hold(a_par)
+        self.support(a_mar, a_par, 'move', 'Bur')
+        locations, supports, conflicts = du.map_orders_to_locations(self.orders)
+        du.add_supports(locations, supports, conflicts)
+        with self.assertRaises(KeyError):
+            print(locations[self.get_terr('Bur')])
