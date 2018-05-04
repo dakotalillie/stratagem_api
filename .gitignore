@@ -5,7 +5,7 @@ Pipfile.lock
 
 # workspace settings
 /.vscode
-
+/.idea
 # configuration settings
 /stratagem_api/config.py
 
