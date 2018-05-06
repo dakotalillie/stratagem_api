@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'authentication.apps.AuthenticationConfig',
     'game.apps.GameConfig'
 ]
 
@@ -139,7 +140,7 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-AUTH_USER_MODEL = 'game.Player'
+AUTH_USER_MODEL = 'authentication.Player'
 
 JWT_AUTH = {
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'stratagem_api.utils.my_jwt_response_handler',

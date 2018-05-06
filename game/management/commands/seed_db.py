@@ -1,7 +1,8 @@
 import json
 
 from django.core.management.base import BaseCommand
-from game.models import Player, Game, Country, Unit, Territory, Turn
+from authentication.models import Player
+from game.models import Game, Country, Unit, Territory, Turn
 from .utils import seed_scenarios
 
 

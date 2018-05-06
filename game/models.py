@@ -1,15 +1,8 @@
 import uuid
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from authentication.models import Player
 from . import constants
 import json
-
-
-class Player(AbstractUser):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    def __str__(self):
-        return self.first_name + " " + self.last_name
 
 
 class Game(models.Model):
@@ -20,11 +13,11 @@ class Game(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     # Necessary to resolve unresolved references in PyCharm
-    objects = models.Manager()
-    territories = models.Manager()
-    units = models.Manager()
-    countries = models.Manager()
-    turns = models.Manager()
+    # objects = models.Manager()
+    # territories = models.Manager()
+    # units = models.Manager()
+    # countries = models.Manager()
+    # turns = models.Manager()
 
     def __str__(self):
         return self.title
@@ -115,7 +108,7 @@ class Territory(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='territories')
     # Necessary to avoid unresolved references in PyCharm.
-    objects = models.Manager()
+    # objects = models.Manager()
 
     def __str__(self):
         return self.abbreviation
@@ -151,7 +144,7 @@ class Unit(models.Model):
                              related_name='units')
     coast = models.CharField(max_length=2, choices=COASTS, blank=True)
     # Necessary to avoid unresolved references in PyCharm.
-    objects = models.Manager()
+    # objects = models.Manager()
 
     def __str__(self):
         return "%s %s %s" % (self.country, self.unit_type, self.territory)
@@ -189,7 +182,7 @@ class Turn(models.Model):
                              related_name='turns')
     created_at = models.DateTimeField(auto_now_add=True)
     # Necessary to avoid unresolved references in PyCharm.
-    objects = models.Manager()
+    # objects = models.Manager()
 
     def __str__(self):
         return "%s %s %s" % (self.phase, self.season, self.year)
@@ -236,4 +229,4 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     via_convoy = models.BooleanField(default=False)
     # Necessary to avoid unresolved references in PyCharm.
-    objects = models.Manager()
+    # objects = models.Manager()
