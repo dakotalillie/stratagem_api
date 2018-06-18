@@ -1,9 +1,10 @@
-from game import utils
 from game.lib.conflicts.Conflict import Conflict
 from game.lib.conflicts.ConvoyRouteConflict import ConvoyRouteConflict
 from game.lib.errors import RouteCannotYetBeResolved
 from game.lib.ObjectsFromDatabase import ObjectsFromDatabase
 from .TurnHandler import TurnHandler
+
+import pdb
 
 
 class DiplomaticTurnHandler(TurnHandler):
@@ -33,7 +34,7 @@ class DiplomaticTurnHandler(TurnHandler):
 
     def _create_orders(self):
         for order_data in self.request_data['orders'].values():
-            self.orders.append(utils.create_order_from_data(order_data))
+            self.orders.append(self._create_order_from_data(order_data))
         self._generate_missing_hold_orders()
 
     def _create_convoy_routes(self):
@@ -71,6 +72,8 @@ class DiplomaticTurnHandler(TurnHandler):
         mapped_orders = {order.origin: order for order in self.orders}
         for order in mapped_orders.values():
             other_order = mapped_orders.get(order.destination)
+            if order == other_order:
+                continue
             if other_order and other_order.destination == order.origin:
                 self._handle_illegal_swap(order, other_order)
 
@@ -89,7 +92,7 @@ class DiplomaticTurnHandler(TurnHandler):
     def _generate_missing_hold_orders(self):
         units_without_orders = self._identify_units_without_orders()
         for unit in units_without_orders:
-            self.orders.append(utils.create_default_hold_order(unit))
+            self.orders.append(self._create_default_hold_order(unit))
 
     def _identify_units_without_orders(self):
         units = set(self.db_objects.units.values())
@@ -117,9 +120,8 @@ class DiplomaticTurnHandler(TurnHandler):
                 if conflict.winner != convoyer:
                     convoy_broken = True
         if not convoy_broken:
-            self.supports = self.supports.filter(lambda support_order:
-                                                 support_order.origin !=
-                                                 convoy_route['destination'])
+            self.supports = [order for order in self.supports
+                             if order.origin != convoy_route['destination']]
 
     def _supported_unit_in_correct_location(self, support_order):
         units_in_aux_destination = self.locations.get(
@@ -134,8 +136,8 @@ class DiplomaticTurnHandler(TurnHandler):
         unit2_in_dest = order2.unit in self.locations[order2.destination]
         if ((unit1_in_dest and unit2_in_dest) and not
                 (order1.via_convoy or order2.via_convoy)):
-            unit1_strength = locations[order1.destination][order1.unit]
-            unit2_strength = locations[order2.destination][order2.unit]
+            unit1_strength = self.locations[order1.destination][order1.unit]
+            unit2_strength = self.locations[order2.destination][order2.unit]
             if unit1_strength >= unit2_strength:
                 self.locations[order2.destination].pop(order2.unit)
                 self._return_unit_to_origin(order2.unit)
