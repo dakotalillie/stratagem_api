@@ -10,33 +10,18 @@ class ConvoyRouteConflict(Conflict):
 
     def resolve(self):
         self._determine_winner()
-        if self.winner == self.convoyer:
-            self._return_defeated_units_to_origins()
-            self.turn_handler.conflicts.remove(self.territory)
-        else:
-            self._return_defeated_units_to_origins()
-            if not self._more_possible_convoy_routes():
-                locations[convoy_route['destination']].pop(unit)
-                return_unit_to_origin(unit=convoy_route['unit'])
-                # Check if there are other ways destination
-                # territory is being attacked. If not, remove
-                # the destination from conflicts
-                more_attacks = len(locations[
-                    convoy_route['destination']
-                ].keys()) > 1
-                if not more_attacks:
-                    conflicts.remove(convoy_route['destination'])
-            # Since the convoy route is broken, we can consider it
-            # resolved without checking the other units
-            conflicts.remove(convoyer.territory)
-            return True        
+        self._return_defeated_units_to_origins()
+        self.turn_handler.conflicts.remove(self.territory)
+        if not self._more_possible_convoy_routes():
+            self._return_convoyed_unit_to_origin()
+            self._check_if_convoy_destination_can_be_removed_from_conflicts()
 
     def _determine_winner(self):
         for unit in self.units_in_combat:
-            self._add_supports(unit)
+            self._add_supports_for_unit(unit)
         return super()._determine_winner(defender=self.convoyer)
 
-    def _add_supports(self, unit):
+    def _add_supports_for_unit(self, unit):
         unit_supports = [
             order for order in self.turn_handler.supports
             if order.aux_unit == unit
@@ -44,7 +29,8 @@ class ConvoyRouteConflict(Conflict):
         for support_order in unit_supports:
             cut = self._check_if_support_is_cut(support_order)
             if not cut:
-                self.units_in_combat[unit] += 1
+                supported_unit = support_order['aux_unit']
+                self.units_in_combat[supported_unit] += 1
                 self.turn_handler.supports.remove(support_order)
 
     def _check_if_support_is_cut(self, support_order):
@@ -72,3 +58,19 @@ class ConvoyRouteConflict(Conflict):
                     cr['destination'] == self.convoy_route['destination']):
                 return True
         return False
+
+    def _return_convoyed_unit_to_origin(self):
+        convoyed_unit = self.convoy_route['unit']
+        self.turn_handler.locations[
+            self.convoy_route['destination']
+        ].pop(convoyed_unit)
+        self._return_unit_to_origin(convoyed_unit)
+
+    def _check_if_convoy_destination_can_be_removed_from_conflicts(self):
+        convoy_destination = self.convoy_route['destination']
+        convoy_destination_still_being_attacked = (
+            len(self.turn_handler.locations[convoy_destination].keys()) > 1
+        )
+        if not convoy_destination_still_being_attacked:
+            self.turn_handler.conflicts.remove(convoy_destination)
+ 

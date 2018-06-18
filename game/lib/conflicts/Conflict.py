@@ -17,7 +17,7 @@ class Conflict():
             if order.origin not in conflicts:
                 locations[order.aux_destination][order.aux_unit] += 1
 
-    def resolve_conflict(conflict_location, locations, conflicts, displaced_units):
+    def resolve_conflict():
         units_in_terr = locations[conflict_location]
         defender = None
         for unit in units_in_terr:
