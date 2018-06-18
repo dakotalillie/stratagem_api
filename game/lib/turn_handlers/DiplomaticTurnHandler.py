@@ -16,7 +16,7 @@ class DiplomaticTurnHandler(TurnHandler):
         self.convoy_routes = []
         self.locations = {}
         self.supports = []
-        self.conflicts = set([])
+        self.conflicts = set()
         self.displaced_units = []
 
     def process_turn(self):

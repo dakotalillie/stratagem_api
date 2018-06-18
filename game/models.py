@@ -12,63 +12,59 @@ class Game(models.Model):
     title = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # Necessary to resolve unresolved references in PyCharm
-    # objects = models.Manager()
-    # territories = models.Manager()
-    # units = models.Manager()
-    # countries = models.Manager()
-    # turns = models.Manager()
 
     def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
-        # This code will trigger only when the game is first created. It
-        # instantiates the turn/countries/territories/units for the
-        # game.
         if len(self.countries.all()) == 0:
-            country_players = kwargs.pop('country_players', {})
-            countries = {c: Country(name=c, game=self,
-                         user=country_players.get(c))
-                         for c in constants.COUNTRY_NAMES}
-            turn = Turn(year=1901, season='spring', phase='diplomatic',
-                        game=self)
+            self.initialize_game()
 
-            with open('game/data/countries.json') as countries_json:
-                country_data = json.loads(countries_json.read())
+    def initialize_game(self, *args, **kwargs):
+        country_players = kwargs.pop('country_players', {})
+        countries = {c: Country(name=c, game=self,
+                     user=country_players.get(c))
+                     for c in constants.COUNTRY_NAMES}
+        turn = Turn(year=1901, season='spring', phase='diplomatic',
+                    game=self)
 
-            with open('game/data/territories.json') as territories_json:
-                territories_data = json.loads(territories_json.read())
+        with open('game/data/countries.json') as countries_json:
+            country_data = json.loads(countries_json.read())
 
-            territories = {}
-            units = {}
-            for country, data in country_data.items():
-                for terr_abbr in data['startingTerritories']:
-                    terr = Territory(name=territories_data[terr_abbr]['name'],
-                                     abbreviation=terr_abbr,
-                                     owner=countries[country], game=self)
-                    territories[terr_abbr] = terr
-                for unit_dict in data['startingUnits']:
-                    unit = Unit(unit_type=unit_dict['type'],
-                                country=countries[country],
-                                territory=territories[unit_dict['territory']],
-                                coast=unit_dict['coast'], game=self)
-                    units[unit.territory.abbreviation] = unit
+        with open('game/data/territories.json') as territories_json:
+            territories_data = json.loads(territories_json.read())
 
-            for terr_abbr, terr_data in territories_data.items():
-                if terr_abbr not in territories:
-                    terr = Territory(
-                        name=terr_data['name'], abbreviation=terr_abbr,
-                        game=self)
-                    territories[terr_abbr] = terr
+        territories = {}
+        for country, data in country_data.items():
+            for terr_abbr in data['startingTerritories']:
+                terr = Territory(name=territories_data[terr_abbr]['name'],
+                                 abbreviation=terr_abbr,
+                                 owner=countries[country], game=self)
+                territories[terr_abbr] = terr
 
-            super(Game, self).save(args, kwargs)
-            turn.save()
-            for country in countries.values():
-                country.save()
-            for territory in territories.values():
-                territory.save()
-            for unit in units.values():
+        for terr_abbr, terr_data in territories_data.items():
+            if terr_abbr not in territories:
+                terr = Territory(name=terr_data['name'],
+                                 abbreviation=terr_abbr, game=self)
+                territories[terr_abbr] = terr
+
+        super(Game, self).save(args, kwargs)
+        turn.save()
+        for country in countries.values():
+            country.save()
+        for territory in territories.values():
+            territory.save()
+
+    def initialize_units(self):
+        with open('game/data/countries.json') as countries_json:
+            country_data = json.loads(countries_json.read())
+
+        for country, data in country_data.items():
+            for unit_dict in data['startingUnits']:
+                unit = Unit(unit_type=unit_dict['type'],
+                            country=countries[country],
+                            territory=territories[unit_dict['territory']],
+                            coast=unit_dict['coast'], game=self)
                 unit.save()
 
     def current_turn(self):
@@ -107,8 +103,6 @@ class Territory(models.Model):
                               blank=True, related_name='territories')
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='territories')
-    # Necessary to avoid unresolved references in PyCharm.
-    # objects = models.Manager()
 
     def __str__(self):
         return self.abbreviation
@@ -143,8 +137,6 @@ class Unit(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='units')
     coast = models.CharField(max_length=2, choices=COASTS, blank=True)
-    # Necessary to avoid unresolved references in PyCharm.
-    # objects = models.Manager()
 
     def __str__(self):
         return "%s %s %s" % (self.country, self.unit_type, self.territory)
@@ -181,8 +173,6 @@ class Turn(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='turns')
     created_at = models.DateTimeField(auto_now_add=True)
-    # Necessary to avoid unresolved references in PyCharm.
-    # objects = models.Manager()
 
     def __str__(self):
         return "%s %s %s" % (self.phase, self.season, self.year)
@@ -228,5 +218,3 @@ class Order(models.Model):
                                         related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
     via_convoy = models.BooleanField(default=False)
-    # Necessary to avoid unresolved references in PyCharm.
-    # objects = models.Manager()

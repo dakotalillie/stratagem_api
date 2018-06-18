@@ -21,7 +21,7 @@ class Conflict():
             if strength == max_strength and unit != max_unit:
                 standoff = True
         if standoff:
-            self.winner = defender if defender
+            self.winner = defender if defender else None
         else:
             self.winner = max_unit
 

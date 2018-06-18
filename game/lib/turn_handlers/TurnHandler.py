@@ -1,5 +1,7 @@
 from abc import ABC
 
+from game.lib.ObjectsFromDatabase import ObjectsFromDatabase
+
 
 class TurnHandler(ABC):
 
