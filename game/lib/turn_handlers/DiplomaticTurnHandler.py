@@ -4,6 +4,7 @@ from game.utils import create_order_from_data
 from .TurnHandler import TurnHandler
 from .ConvoyRouteConflict import ConvoyRouteConflict
 
+
 class DiplomaticTurnHandler(TurnHandler):
 
     def __init__(self, game, request_data):

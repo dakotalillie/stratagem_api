@@ -1,34 +1,10 @@
 class Conflict():
 
-    def __init__(self):
-        pass
-
-    def return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
-                                     locations, conflicts, displaced_units):
-    units_to_move = [unit for unit in units_in_terr if unit != winner]
-
-    for unit in units_to_move:
-        # Cannot displace own unit.
-        if (unit.territory == conflict_location and unit.country ==
-                winner.country):
-            units_in_terr.pop(winner)
-            return_unit_to_origin(winner, locations, conflicts)
-        else:
-            units_in_terr.pop(unit)
-            if unit.territory == conflict_location:
-                unit.invaded_from = winner.territory
-                displaced_units.append(unit)
-            else:
-                return_unit_to_origin(unit, locations, conflicts)
-
-
-    def return_unit_to_origin(unit, locations, conflicts):
-        if unit.territory not in locations:
-            locations[unit.territory] = {unit: 1}
-        else:
-            locations[unit.territory][unit] = 1
-            conflicts.add(unit.territory)
-
+    def __init__(self, turn_handler, territory):
+        self.turn_handler = turn_handler
+        self.territory = territory
+        self.units = turn_handler.locations[territory]
+        self.winner = None
 
     def add_supports(locations, supports, conflicts):
         for order in supports:
@@ -41,7 +17,6 @@ class Conflict():
             if order.origin not in conflicts:
                 locations[order.aux_destination][order.aux_unit] += 1
 
-
     def resolve_conflict(conflict_location, locations, conflicts, displaced_units):
         units_in_terr = locations[conflict_location]
         defender = None
@@ -50,18 +25,43 @@ class Conflict():
                 defender = unit
                 break
         winner = determine_conflict_outcome(defender, units_in_terr)
-        return_defeated_units_to_origins(conflict_location, units_in_terr, winner,
-                                        locations, conflicts, displaced_units)
+        return_defeated_units_to_origins()
 
-
-    def determine_conflict_outcome(defender, units_in_terr):
-        max_unit = max(units_in_terr, key=units_in_terr.get)
-        max_strength = units_in_terr[max_unit]
+    def _determine_winner(defender):
+        max_unit = max(self.units, key=self.units.get)
+        max_strength = self.units[max_unit]
         standoff = False
-        for unit, strength in units_in_terr.items():
+        for unit, strength in self.units.items():
             if strength == max_strength and unit != max_unit:
                 standoff = True
         if standoff:
-            return defender if defender else None
+            self.winner = defender if defender
         else:
-            return max_unit
+            self.winner = max_unit
+
+    def _return_defeated_units_to_origins(self):
+        units_to_move = [unit for unit in self.units if unit != self.winner]
+        for unit in units_to_move:
+            if not self._losing_unit_belongs_to_winner(unit):
+                self.units.pop(unit)
+                if not self._unit_will_be_displaced(unit):
+                    self._return_unit_to_origin(unit)
+
+    def _losing_unit_belongs_to_winner(self, unit):
+        if (unit.territory == self.territory and
+                unit.country == self.winner.country):
+            self.units.pop(winner)
+            self._return_unit_to_origin(winner)
+            return True
+
+    def _unit_will_be_displaced(self, unit):
+        if unit.territory == self.territory:
+            unit.invaded_from = self.winner.territory
+            self.turn_handler.displaced_units.append(unit)
+
+    def _return_unit_to_origin(self, unit):
+        if unit.territory not in self.turn_handler.locations:
+            self.turn_handler.locations[unit.territory] = {unit: 1}
+        else:
+            self.turn_handler.locations[unit.territory][unit] = 1
+            self.turn_handler.conflicts.add(unit.territory)
