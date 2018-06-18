@@ -34,5 +34,18 @@ def create_order_from_data(order_data, db_objects):
     )
 
     order.save()
+    return order
 
+
+def create_default_hold_order(unit):
+    order = models.Order(
+                turn=self.db_objects.game.current_turn(),
+                unit=unit,
+                order_type='hold',
+                origin=unit.territory,
+                destination=unit.territory,
+                coast=unit.coast
+            )
+
+    order.save()
     return order

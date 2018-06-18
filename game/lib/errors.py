@@ -1,6 +1,2 @@
-class RouteCannotBeResolved(Exception):
-    pass
-
-
-class ConvoyerDisplaced(Exception):
+class RouteCannotYetBeResolved(Exception):
     pass

@@ -73,4 +73,3 @@ class ConvoyRouteConflict(Conflict):
         )
         if not convoy_destination_still_being_attacked:
             self.turn_handler.conflicts.remove(convoy_destination)
- 
