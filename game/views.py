@@ -3,13 +3,13 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from . import models
-from . import serializers
 from .utils import general_utils as gu
 from .utils import diplomatic_utils as du
 from .utils import reinforcement_utils
 from .utils import retreat_utils
 from .utils import update_turn_utils
+from . import models
+from . import serializers
 from . import constants
 
 import pdb
@@ -82,7 +82,6 @@ class OrderList(APIView):
 
     def post(self, request, pk):
         data = gu.dict_keys_to_snake_case(request.data)
-        pdb.set_trace()
         game = self.get_game(pk)
         retreat_phase_necessary = False
         objects = {

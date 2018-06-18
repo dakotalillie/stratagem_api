@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'rest_framework',
     'corsheaders',
     'authentication.apps.AuthenticationConfig',
@@ -146,3 +147,5 @@ JWT_AUTH = {
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'stratagem_api.utils.my_jwt_response_handler',
     'JWT_VERIFY_EXPIRATION': False
 }
+
+ASGI_APPLICATION = 'stratagem_api.routing.application'

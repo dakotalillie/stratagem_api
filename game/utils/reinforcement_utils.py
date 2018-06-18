@@ -23,7 +23,7 @@ def create_reinforcement_order_from_data(data, objects):
     :return: a newly created Order object.
     """
     if data['order_type'] == 'create':
-        territory = objects['territories'][data['territory']]
+        territory = objects['territories'][data['origin']]
         country = objects['countries'][data['country']]
         unit = objects['game'].units.create(
             territory=territory,
@@ -41,7 +41,7 @@ def create_reinforcement_order_from_data(data, objects):
         )
 
     elif data['order_type'] == 'delete':
-        territory = objects['territories'][data['territory']]
+        territory = objects['territories'][data['origin']]
         unit = objects['units'][data['unit_id']]
         unit.deactivate()
 
