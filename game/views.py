@@ -82,7 +82,7 @@ class OrderList(APIView):
     def post(self, request, pk):
         game = self.get_game(pk)
         data = utils.dict_keys_to_snake_case(request.data)
-        turn_processor = TurnProcessor.get_turn_processor(game, data)
+        turn_processor = utils.get_turn_processor(game, data)
         turn_processor.process_turn()
         serializer = serializers.GameDetailSerializer(game)
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -1,7 +1,6 @@
 from game.lib.conflicts.Conflict import Conflict
 from game.lib.conflicts.ConvoyRouteConflict import ConvoyRouteConflict
 from game.lib.errors import RouteCannotYetBeResolved
-from game.lib.ObjectsFromDatabase import ObjectsFromDatabase
 from .TurnProcessor import TurnProcessor
 
 import pdb
@@ -13,11 +12,10 @@ class DiplomaticTurnProcessor(TurnProcessor):
 
     def __init__(self, game, request_data):
         super().__init__(game, request_data)
-        self.orders = []
-        self.convoy_routes = []
         self.locations = {}
-        self.supports = []
         self.conflicts = set()
+        self.supports = []
+        self.convoy_routes = []
         self.displaced_units = []
 
     def process_turn(self):

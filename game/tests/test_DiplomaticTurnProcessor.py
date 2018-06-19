@@ -1,5 +1,3 @@
-from game import models
-from game.lib.ObjectsFromDatabase import ObjectsFromDatabase
 from game.lib.StratagemTestCase import StratagemTestCase
 from game.lib.turn_processors.DiplomaticTurnProcessor import \
                                                       DiplomaticTurnProcessor
