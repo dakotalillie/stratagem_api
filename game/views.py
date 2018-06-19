@@ -22,10 +22,9 @@ class Sandbox(APIView):
 
     def post(self, request):
         country_players = {country: request.user for country in
-                           constants.COUNTRY_NAMES}
+                           constants.COUNTRIES.as_list()}
         game = models.Game(title='New Sandbox')
-        game.save(country_players=country_players)
-        game.initialize_units()
+        game.save(country_players=country_players, initialize_units=True)
         return Response({'game_id': game.id}, status=status.HTTP_201_CREATED)
 
 

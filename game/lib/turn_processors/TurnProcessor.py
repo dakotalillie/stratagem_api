@@ -92,53 +92,6 @@ class TurnProcessor(ABC):
         order.save()
         return order
 
-    def _update_turn(self):
-        self._create_new_turn()
-        if self.game.current_turn().phase == 'reinforcement':
-            self._update_territory_owners()
-
-    def _create_new_turn(self):
-        current_turn = self.game.current_turn()
-        if current_turn.phase == 'diplomatic':
-            if self.retreat_phase_necessary:
-                return self.game.turns.create(
-                    year=current_turn.year,
-                    season=current_turn.season,
-                    phase='retreat'
-                )
-            elif (not self.retreat_phase_necessary and
-                    current_turn.season == 'fall'):
-                return self.game.turns.create(
-                    year=current_turn.year,
-                    season='fall',
-                    phase='reinforcement'
-                )
-            else:
-                return self.game.turns.create(
-                    year=current_turn.year,
-                    season='fall',
-                    phase='diplomatic'
-                )
-        elif current_turn.phase == 'retreat':
-            if current_turn.season == 'fall':
-                return self.game.turns.create(
-                    year=current_turn.year,
-                    season='fall',
-                    phase='reinforcement'
-                )
-            else:
-                return self.game.turns.create(
-                    year=current_turn.year,
-                    season='fall',
-                    phase='diplomatic'
-                )
-        elif current_turn.phase == 'reinforcement':
-            return self.game.turns.create(
-                year=current_turn.year + 1,
-                season='spring',
-                phase='diplomatic'
-            )
-
     def _update_territory_owners(self):
         with open('game/data/territories.json') as territories_json:
             territory_data = json.loads(territories_json.read())

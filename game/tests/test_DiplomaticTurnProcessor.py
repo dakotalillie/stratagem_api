@@ -12,8 +12,8 @@ class SimpleMoveOrderTestCase(StratagemTestCase):
         super().setUp()
         self.par = self.create_unit('Par', 'army', 'France')
         self.eng = self.create_unit('ENG', 'fleet', 'France')
-        self.move(self.par, 'Bur')
-        self.move(self.eng, 'Bel')
+        self.issue_move_order(self.par, 'Bur')
+        self.issue_move_order(self.eng, 'Bel')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
@@ -32,8 +32,8 @@ class SimpleStandoffTestCase(StratagemTestCase):
         super().setUp()
         self.ber = self.create_unit('Ber', 'army', 'Germany')
         self.war = self.create_unit('War', 'army', 'Russia')
-        self.move(self.ber, 'Sil')
-        self.move(self.war, 'Sil')
+        self.issue_move_order(self.ber, 'Sil')
+        self.issue_move_order(self.war, 'Sil')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
@@ -51,8 +51,8 @@ class IllegalSwapsTestCase(StratagemTestCase):
         super().setUp()
         self.ber = self.create_unit('Ber', 'army', 'Germany')
         self.pru = self.create_unit('Pru', 'army', 'Russia')
-        self.move(self.ber, 'Pru')
-        self.move(self.pru, 'Ber')
+        self.issue_move_order(self.ber, 'Pru')
+        self.issue_move_order(self.pru, 'Ber')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
@@ -71,14 +71,13 @@ class SimpleSupportTestCase(StratagemTestCase):
         self.mar = self.create_unit('Mar', 'army', 'France')
         self.gas = self.create_unit('Gas', 'army', 'France')
         self.bur = self.create_unit('Bur', 'army', 'Germany')
-        self.move(self.mar, 'Bur')
-        self.support(self.gas, self.mar, 'Bur')
+        self.issue_move_order(self.mar, 'Bur')
+        self.issue_support_order(self.gas, self.mar, 'Bur')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
         self.assertUnitIsDisplaced(self.bur)
         self.assertUnitInTerritory(self.mar, 'Bur')
-        self.assertUnitInTerritory(self.gas, 'Gas')
 
 
 class ComplexSupportTestCase1(StratagemTestCase):
@@ -96,21 +95,18 @@ class ComplexSupportTestCase1(StratagemTestCase):
         self.war = self.create_unit('War', 'army', 'Russia')
         self.boh = self.create_unit('Boh', 'army', 'Austria')
         self.tyr = self.create_unit('Tyr', 'army', 'Austria')
-        self.support(self.ber, self.mun, 'Sil')
-        self.move(self.mun, 'Sil')
-        self.support(self.pru, self.war, 'Sil')
-        self.move(self.war, 'Sil')
-        self.support(self.tyr, self.boh, 'Mun')
-        self.move(self.boh, 'Mun')
+        self.issue_support_order(self.ber, self.mun, 'Sil')
+        self.issue_move_order(self.mun, 'Sil')
+        self.issue_support_order(self.pru, self.war, 'Sil')
+        self.issue_move_order(self.war, 'Sil')
+        self.issue_support_order(self.tyr, self.boh, 'Mun')
+        self.issue_move_order(self.boh, 'Mun')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
         self.assertUnitIsDisplaced(self.mun)
         self.assertUnitInTerritory(self.boh, 'Mun')
-        self.assertUnitInTerritory(self.ber, 'Ber')
-        self.assertUnitInTerritory(self.pru, 'Pru')
         self.assertUnitInTerritory(self.war, 'War')
-        self.assertUnitInTerritory(self.tyr, 'Tyr')
 
 
 class ComplexSupportTestCase2(StratagemTestCase):
@@ -128,21 +124,18 @@ class ComplexSupportTestCase2(StratagemTestCase):
         self.gre = self.create_unit('Gre', 'army', 'Russia')
         self.bul = self.create_unit('Bul', 'army', 'Turkey')
         self.bla = self.create_unit('BLA', 'army', 'Turkey')
-        self.move(self.sev, 'Rum')
-        self.move(self.rum, 'Bul')
-        self.support(self.ser, self.rum, 'Bul')
-        self.support(self.gre, self.rum, 'Bul')
-        self.move(self.bul, 'Rum')
-        self.support(self.bla, self.bul, 'Rum')
+        self.issue_move_order(self.sev, 'Rum')
+        self.issue_move_order(self.rum, 'Bul')
+        self.issue_support_order(self.ser, self.rum, 'Bul')
+        self.issue_support_order(self.gre, self.rum, 'Bul')
+        self.issue_move_order(self.bul, 'Rum')
+        self.issue_support_order(self.bla, self.bul, 'Rum')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
         self.assertUnitIsDisplaced(self.bul)
         self.assertUnitInTerritory(self.sev, 'Rum')
         self.assertUnitInTerritory(self.rum, 'Bul')
-        self.assertUnitInTerritory(self.ser, 'Ser')
-        self.assertUnitInTerritory(self.gre, 'Gre')
-        self.assertUnitInTerritory(self.bla, 'BLA')
 
 
 class CuttingSupportTestCase(StratagemTestCase):
@@ -160,20 +153,18 @@ class CuttingSupportTestCase(StratagemTestCase):
         self.sil = self.create_unit('Sil', 'army', 'Russia')
         self.boh = self.create_unit('Boh', 'army', 'Austria')
         self.tyr = self.create_unit('Tyr', 'army', 'Austria')
-        self.move(self.mun, 'Sil')
-        self.move(self.pru, 'Ber')
-        self.support(self.sil, self.pru, 'Ber')
-        self.move(self.boh, 'Mun')
-        self.support(self.tyr, self.boh, 'Mun')
+        self.issue_move_order(self.mun, 'Sil')
+        self.issue_move_order(self.pru, 'Ber')
+        self.issue_support_order(self.sil, self.pru, 'Ber')
+        self.issue_move_order(self.boh, 'Mun')
+        self.issue_support_order(self.tyr, self.boh, 'Mun')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
         self.assertUnitIsDisplaced(self.mun)
         self.assertUnitInTerritory(self.ber, 'Ber')
         self.assertUnitInTerritory(self.pru, 'Pru')
-        self.assertUnitInTerritory(self.sil, 'Sil')
         self.assertUnitInTerritory(self.boh, 'Mun')
-        self.assertUnitInTerritory(self.tyr, 'Tyr')
 
 
 class SimpleConvoysTestCase(StratagemTestCase):
@@ -192,8 +183,6 @@ class SimpleConvoysTestCase(StratagemTestCase):
 
     def test_correctly_processes_turn(self):
         self.assertUnitInTerritory(self.lvp, 'Spa', coast='NC')
-        self.assertUnitInTerritory(self.iri, 'IRI')
-        self.assertUnitInTerritory(self.mao, 'MAO')
 
 
 class CuttingSupportOnOwnUnitsTestCase(StratagemTestCase):
@@ -208,14 +197,12 @@ class CuttingSupportOnOwnUnitsTestCase(StratagemTestCase):
         self.tri = self.create_unit('Tri', 'army', 'Austria')
         self.ser = self.create_unit('Ser', 'army', 'Austria')
         self.bud = self.create_unit('Bud', 'army', 'Russia')
-        self.move(self.vie, 'Tri')
-        self.move(self.ser, 'Bud')
-        self.support(self.tri, self.ser, 'Bud')
+        self.issue_move_order(self.vie, 'Tri')
+        self.issue_move_order(self.ser, 'Bud')
+        self.issue_support_order(self.tri, self.ser, 'Bud')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
-        self.assertUnitInTerritory(self.vie, 'Vie')
-        self.assertUnitInTerritory(self.tri, 'Tri')
         self.assertUnitInTerritory(self.ser, 'Bud')
         self.assertUnitIsDisplaced(self.bud)
 
@@ -239,8 +226,6 @@ class ExchangePlacesViaConvoyTestCase(StratagemTestCase):
     def test_correctly_processes_turn(self):
         self.assertUnitInTerritory(self.lon, 'Bel')
         self.assertUnitInTerritory(self.bel, 'Lon')
-        self.assertUnitInTerritory(self.eng, 'ENG')
-        self.assertUnitInTerritory(self.nth, 'NTH')
 
 
 class MultipleConvoyRoutesTestCase(StratagemTestCase):
@@ -259,16 +244,14 @@ class MultipleConvoyRoutesTestCase(StratagemTestCase):
         self.iri = self.create_unit('IRI', 'fleet', 'France')
         self.create_convoy_route(self.lon, 'Bel', convoyers=[self.eng])
         self.create_convoy_route(self.lon, 'Bel', convoyers=[self.nth])
-        self.move(self.bre, 'ENG')
-        self.support(self.iri, self.bre, 'ENG')
+        self.issue_move_order(self.bre, 'ENG')
+        self.issue_support_order(self.iri, self.bre, 'ENG')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
         self.assertUnitIsDisplaced(self.eng)
-        self.assertUnitInTerritory(self.lon, 'Bel')
         self.assertUnitInTerritory(self.bre, 'ENG')
-        self.assertUnitInTerritory(self.iri, 'IRI')
-        self.assertUnitInTerritory(self.nth, 'NTH')
+        self.assertUnitInTerritory(self.lon, 'Bel')
 
 
 class ComplexConvoysTestCase1(StratagemTestCase):
@@ -286,15 +269,14 @@ class ComplexConvoysTestCase1(StratagemTestCase):
         self.nap = self.create_unit('Nap', 'fleet', 'Italy')
         self.ion = self.create_unit('ION', 'fleet', 'Italy')
         self.create_convoy_route(self.tun, 'Nap', convoyers=[self.tys])
-        self.move(self.ion, 'TYS')
-        self.support(self.nap, self.ion, 'TYS')
+        self.issue_move_order(self.ion, 'TYS')
+        self.issue_support_order(self.nap, self.ion, 'TYS')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
         self.assertUnitIsDisplaced(self.tys)
         self.assertUnitInTerritory(self.ion, 'TYS')
         self.assertUnitInTerritory(self.tun, 'Tun')
-        self.assertUnitInTerritory(self.nap, 'Nap')
 
 
 class ComplexConvoysTestCase2(StratagemTestCase):
@@ -315,13 +297,58 @@ class ComplexConvoysTestCase2(StratagemTestCase):
         self.rom = self.create_unit('Rom', 'fleet', 'Italy')
         self.create_convoy_route(self.tun, 'Nap', convoyers=[self.tys])
         self.create_convoy_route(self.tun, 'Nap', convoyers=[self.ion])
-        self.move(self.rom, 'TYS')
-        self.support(self.nap, self.rom, 'TYS')
+        self.issue_move_order(self.rom, 'TYS')
+        self.issue_support_order(self.nap, self.rom, 'TYS')
         DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
 
     def test_correctly_processes_turn(self):
-        self.assertUnitInTerritory(self.tun, 'Tun')
         self.assertUnitInTerritory(self.tys, 'TYS')
-        self.assertUnitInTerritory(self.ion, 'ION')
-        self.assertUnitInTerritory(self.nap, 'Nap')
         self.assertUnitInTerritory(self.rom, 'Rom')
+
+
+class UpdateTurnTestCase1(StratagemTestCase):
+    """
+    If current season is spring and no retreat phase is necessary,
+    transitions to fall.
+    """
+
+    def setUp(self):
+        super().setUp()
+        DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
+
+    def test_correctly_processes_turn(self):
+        self.assertCurrentTurn(1901, 'fall', 'diplomatic')
+
+
+class UpdateTurnTestCase2(StratagemTestCase):
+    """
+    If a retreat phase is necessary, transitions to retreat phase of
+    the same season.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.mar = self.create_unit('Mar', 'army', 'France')
+        self.gas = self.create_unit('Gas', 'army', 'France')
+        self.bur = self.create_unit('Bur', 'army', 'Germany')
+        self.issue_move_order(self.mar, 'Bur')
+        self.issue_support_order(self.gas, self.mar, 'Bur')
+        DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
+
+    def test_correctly_processes_turn(self):
+        self.assertCurrentTurn(1901, 'spring', 'retreat')
+
+
+class UpdateTurnTestCase3(StratagemTestCase):
+    """
+    If the current season is fall and no retreat phase is necessary,
+    transitions to fall reinforcement phase.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.set_current_turn(1901, 'fall', 'diplomatic')
+        DiplomaticTurnProcessor(self.game, self.request_data).process_turn()
+
+    def test_correctly_processes_turn(self):
+        self.assertCurrentTurn(1901, 'fall', 'reinforcement')

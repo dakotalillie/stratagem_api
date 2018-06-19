@@ -6,6 +6,7 @@ class ReinforcementTurnProcessor(TurnProcessor):
     def process_turn(self):
         self._create_orders()
         self._process_orders()
+        self._update_turn()
 
     def _create_orders(self):
         for order_data in self.request_data['orders'].values():
@@ -28,3 +29,11 @@ class ReinforcementTurnProcessor(TurnProcessor):
 
     def _deactivate_unit(self, order):
         order.unit.deactivate()
+
+    def _update_turn(self):
+        current_turn = self.game.current_turn()
+        self.game.turns.create(
+            year=current_turn.year + 1,
+            season='spring',
+            phase='diplomatic'
+        )

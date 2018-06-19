@@ -15,6 +15,8 @@ class RetreatTurnProcessor(TurnProcessor):
         self._deactivate_units_in_conflicts()
         self._update_unit_locations()
         self._update_turn()
+        if self.game.current_turn().phase == 'reinforcement':
+            self._update_territory_owners()
 
     def _create_orders(self):
         for order_data in self.request_data['orders'].values():
@@ -62,3 +64,18 @@ class RetreatTurnProcessor(TurnProcessor):
             unit.retreating_from = None
             unit.invaded_from = None
             unit.save()
+
+    def _update_turn(self):
+        current_turn = self.game.current_turn()
+        if current_turn.season == 'fall':
+            self.game.turns.create(
+                year=current_turn.year,
+                season='fall',
+                phase='reinforcement'
+            )
+        else:
+            self.game.turns.create(
+                year=current_turn.year,
+                season='fall',
+                phase='diplomatic'
+            )

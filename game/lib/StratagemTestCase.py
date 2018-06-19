@@ -34,7 +34,7 @@ class StratagemTestCase(TestCase):
     def get_terr(self, terr_abbr):
         return self.game.territories.get(abbreviation=terr_abbr)
 
-    def hold(self, unit):
+    def issue_hold_order(self, unit):
         self.request_data['orders'][unit.id] = {
             'unit_id': str(unit.id),
             'order_type': 'hold',
@@ -43,26 +43,22 @@ class StratagemTestCase(TestCase):
             'coast': unit.coast
         }
 
-    def move(self, unit, destination, coast='', via_convoy=False):
+    def issue_move_order(self, unit, destination, coast='', via_convoy=False):
+        if unit.territory:
+            origin = unit.territory.abbreviation
+        elif unit.retreating_from:
+            origin = unit.retreating_from.abbreviation
+
         self.request_data['orders'][unit.id] = {
             'unit_id': str(unit.id),
             'order_type': 'move',
-            'origin': unit.territory.abbreviation,
+            'origin': origin,
             'destination': destination,
             'coast': coast,
             'via_convoy': via_convoy
         }
 
-    def move_displaced(self, unit, destination, coast=''):
-        self.request_data['orders'][unit.id] = {
-            'order_type': 'move',
-            'unit_id': str(unit.id),
-            'origin': unit.retreating_from.abbreviation,
-            'destination': destination,
-            'coast': coast,
-        }
-
-    def support(self, unit, aux_unit, aux_destination):
+    def issue_support_order(self, unit, aux_unit, aux_destination):
         aux_order_type = (
             'move' if aux_destination != aux_unit.territory.abbreviation
             else 'hold'
@@ -79,8 +75,29 @@ class StratagemTestCase(TestCase):
             'aux_destination': aux_destination
         }
 
+    def issue_create_order(self, origin, unit_type, country, coast=''):
+        self.request_data['orders'][origin] = {
+            'order_type': 'create',
+            'origin': origin,
+            'unit_type': unit_type,
+            'country': country,
+            'coast': coast
+        }
+
+    def issue_delete_order(self, unit):
+        if unit.territory:
+            origin = unit.territory.abbreviation
+        elif unit.retreating_from:
+            origin = unit.retreating_from.abbreviation
+            
+        self.request_data['orders'][unit.id] = {
+            'order_type': 'delete',
+            'unit_id': str(unit.id),
+            'origin': origin,
+        }
+
     def create_convoy_route(self, unit, destination, coast='', convoyers=[]):
-        self.move(unit, destination, coast, via_convoy=True)
+        self.issue_move_order(unit, destination, coast, via_convoy=True)
         route = []
         for convoyer in convoyers:
             self.request_data['orders'][convoyer.id] = {
@@ -109,26 +126,6 @@ class StratagemTestCase(TestCase):
             'destination': destination,
             'route': route
         })
-
-    def create(self, origin, unit_type, country, coast=''):
-        self.request_data['orders'][origin] = {
-            'order_type': 'create',
-            'origin': origin,
-            'unit_type': unit_type,
-            'country': country,
-            'coast': coast
-        }
-
-    def delete(self, unit):
-        if unit.territory:
-            origin = unit.territory.abbreviation
-        elif unit.retreating_from:
-            origin = unit.retreating_from.abbreviation
-        self.request_data['orders'][unit.id] = {
-            'order_type': 'delete',
-            'unit_id': str(unit.id),
-            'origin': origin,
-        }
 
     def assertUnitInTerritory(self, unit, territory, coast=None):
         new_unit = self.get_unit(unit.id)

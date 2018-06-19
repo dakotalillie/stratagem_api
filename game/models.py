@@ -17,14 +17,17 @@ class Game(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        if len(self.countries.all()) == 0:
-            self.initialize_game()
-
-    def initialize_game(self, *args, **kwargs):
         country_players = kwargs.pop('country_players', {})
+        initialize_units = kwargs.pop('initialize_units', False)
+        super(Game, self).save(args, kwargs)
+        if len(self.countries.all()) == 0:
+            self.initialize_game(country_players, initialize_units)
+
+    def initialize_game(self, country_players, initialize_units):
         countries = {c: Country(name=c, game=self,
                      user=country_players.get(c))
                      for c in constants.COUNTRIES.as_list()}
+
         turn = Turn(year=1901, season='spring', phase='diplomatic',
                     game=self)
 
@@ -48,14 +51,17 @@ class Game(models.Model):
                                  abbreviation=terr_abbr, game=self)
                 territories[terr_abbr] = terr
 
-        super(Game, self).save(args, kwargs)
         turn.save()
         for country in countries.values():
             country.save()
         for territory in territories.values():
             territory.save()
 
-    def initialize_units(self):
+        if initialize_units:
+            self.initialize_units(countries, territories)
+
+    def initialize_units(self, countries, territories):
+          
         with open('game/data/countries.json') as countries_json:
             country_data = json.loads(countries_json.read())
 

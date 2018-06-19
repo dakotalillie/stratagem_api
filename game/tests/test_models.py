@@ -12,7 +12,7 @@ class GameTestCase(TestCase):
         self.player.save()
 
         country_players = {country: self.player for country in
-                           constants.COUNTRY_NAMES}
+                           constants.COUNTRIES.as_list()}
 
         self.game = models.Game(title="New Game")
         self.game.save(country_players=country_players)
@@ -30,6 +30,3 @@ class GameTestCase(TestCase):
 
     def test_creating_game_instantiates_territories(self):
         self.assertEqual(len(self.game.territories.all()), 75)
-
-    def test_creating_game_instantiates_units(self):
-        self.assertEqual(len(self.game.units.all()), 22)

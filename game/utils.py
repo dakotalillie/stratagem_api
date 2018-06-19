@@ -1,6 +1,6 @@
-from game.lib.turn_processors.DiplomaticTurnProcessor import \
-                                                      DiplomaticTurnProcessor
-from game.lib.turn_processors.RetreatTurnProcessor import RetreatTurnProcessor
+from game.lib.turn_processors import DiplomaticTurnProcessor
+from game.lib.turn_processors import RetreatTurnProcessor
+from game.lib.turn_processors import ReinforcementTurnProcessor
 
 
 def get_turn_processor(game, data):
@@ -10,7 +10,7 @@ def get_turn_processor(game, data):
     elif phase == 'retreat':
         return RetreatTurnProcessor(game, data)
     elif phase == 'reinforcement':
-        pass
+        return ReinforcementTurnProcessor(game, data)
 
 
 def dict_keys_to_snake_case(old_dict):
@@ -19,6 +19,8 @@ def dict_keys_to_snake_case(old_dict):
         new_key = camel_case_to_snake_case(key)
         if type(value) == dict:
             new_dict[new_key] = dict_keys_to_snake_case(value)
+        elif type(value) == list:
+            new_dict[new_key] = [dict_keys_to_snake_case(i) for i in value]
         else:
             new_dict[new_key] = value
     return new_dict

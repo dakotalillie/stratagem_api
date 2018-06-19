@@ -28,6 +28,8 @@ class DiplomaticTurnProcessor(TurnProcessor):
         self._resolve_conflicts()
         self._update_unit_locations()
         self._update_turn()
+        if self.game.current_turn().phase == 'reinforcement':
+            self._update_territory_owners()
 
     """ PRIMARY HELPERS """
 
@@ -87,6 +89,28 @@ class DiplomaticTurnProcessor(TurnProcessor):
         self._reset_unit_territories()
         self._map_new_unit_locations()
 
+    def _update_turn(self):
+        current_turn = self.game.current_turn()
+        if self.retreat_phase_necessary:
+            self.game.turns.create(
+                year=current_turn.year,
+                season=current_turn.season,
+                phase='retreat'
+            )
+        elif (not self.retreat_phase_necessary and 
+              current_turn.season == 'fall'):
+            self.game.turns.create(
+                year=current_turn.year,
+                season='fall',
+                phase='reinforcement'
+            )
+        else:
+            self.game.turns.create(
+                year=current_turn.year,
+                season='fall',
+                phase='diplomatic'
+            )
+
     """ SECONDARY HELPERS """
 
     def _generate_missing_hold_orders(self):
@@ -101,6 +125,8 @@ class DiplomaticTurnProcessor(TurnProcessor):
         return units
 
     def _map_convoy_route(self, route_data):
+        import pdb
+        pdb.set_trace()
         return {
             'unit': self.db_objects.units[route_data['unit_id']],
             'origin': self.db_objects.territories[route_data['origin']],
