@@ -1,4 +1,5 @@
 from .Conflict import Conflict
+from game.lib.errors import RouteCannotYetBeResolved
 
 import pdb
 
@@ -38,7 +39,7 @@ class ConvoyRouteConflict(Conflict):
     def _check_if_support_is_cut(self, support_order):
         if self._support_can_only_be_cut_by_convoyed_unit(support_order):
             if self._more_possible_convoy_routes():
-                raise RouteCannotBeResolved
+                raise RouteCannotYetBeResolved
             else:
                 return False
         if support_order.origin in self.turn_handler.conflicts:

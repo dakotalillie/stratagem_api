@@ -45,3 +45,4 @@ class Conflict():
             unit.invaded_from = self.winner.territory
             self.turn_handler.displaced_units.append(unit)
             self.turn_handler.retreat_phase_necessary = True
+            return True

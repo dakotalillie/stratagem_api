@@ -63,7 +63,8 @@ class DiplomaticTurnHandler(TurnHandler):
         for support_order in self.supports:
             if not self._supported_unit_in_correct_location(support_order):
                 continue
-            if support_order.origin not in self.conflicts:
+            if ((support_order.origin not in self.conflicts) or
+                    self._support_would_be_cut_by_own_unit(support_order)):
                 territory = support_order.aux_destination
                 unit = support_order.aux_unit
                 self.locations[territory][unit] += 1
@@ -130,6 +131,12 @@ class DiplomaticTurnHandler(TurnHandler):
         if not units_in_aux_destination:
             return False
         return support_order.aux_unit in units_in_aux_destination
+
+    def _support_would_be_cut_by_own_unit(self, support_order):
+        for unit in self.locations[support_order.origin]:
+            if unit.country != support_order.unit.country:
+                return False
+        return True
 
     def _handle_illegal_swap(self, order1, order2):
         unit1_in_dest = order1.unit in self.locations[order1.destination]
