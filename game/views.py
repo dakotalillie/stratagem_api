@@ -3,10 +3,12 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+
 from . import models
 from . import serializers
 from . import constants
 from . import utils
+
 
 import pdb
 
@@ -78,16 +80,10 @@ class OrderList(APIView):
             raise Http404
 
     def post(self, request, pk):
-        data = utils.dict_keys_to_snake_case(request.data)
         game = self.get_game(pk)
-        pdb.set_trace()
-        if game.current_turn().phase == 'diplomatic':
-            pass
-        elif game.current_turn().phase == 'retreat':
-            pass
-        elif game.current_turn().phase == 'reinforcement':
-            pass
-        update_turn_utils.update_turn(game, retreat_phase_necessary)
+        data = utils.dict_keys_to_snake_case(request.data)
+        turn_processor = TurnProcessor.get_turn_processor(game, data)
+        turn_processor.process_turn()
         serializer = serializers.GameDetailSerializer(game)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

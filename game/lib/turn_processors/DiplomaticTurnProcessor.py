@@ -2,12 +2,12 @@ from game.lib.conflicts.Conflict import Conflict
 from game.lib.conflicts.ConvoyRouteConflict import ConvoyRouteConflict
 from game.lib.errors import RouteCannotYetBeResolved
 from game.lib.ObjectsFromDatabase import ObjectsFromDatabase
-from .TurnHandler import TurnHandler
+from .TurnProcessor import TurnProcessor
 
 import pdb
 
 
-class DiplomaticTurnHandler(TurnHandler):
+class DiplomaticTurnProcessor(TurnProcessor):
 
     """ PUBLIC METHODS """
 
@@ -29,6 +29,7 @@ class DiplomaticTurnHandler(TurnHandler):
         self._check_for_illegal_swaps()
         self._resolve_conflicts()
         self._update_unit_locations()
+        self._update_turn()
 
     """ PRIMARY HELPERS """
 
