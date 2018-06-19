@@ -85,6 +85,8 @@ class Country(models.Model):
                              related_name='countries')
     user = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True,
                              blank=True, related_name='countries')
+    ready = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name

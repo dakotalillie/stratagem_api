@@ -21,6 +21,7 @@ pylint = "*"
 "autopep8" = "*"
 djangorestframework-jwt = "*"
 channels = "*"
+channels-redis = "*"
 
 
 [dev-packages]

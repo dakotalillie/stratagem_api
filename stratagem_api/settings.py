@@ -32,17 +32,17 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
+    'rest_framework',
+    'corsheaders',
+    'authentication',
+    'game',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'channels',
-    'rest_framework',
-    'corsheaders',
-    'authentication.apps.AuthenticationConfig',
-    'game.apps.GameConfig'
 ]
 
 MIDDLEWARE = [
@@ -149,3 +149,11 @@ JWT_AUTH = {
 }
 
 ASGI_APPLICATION = 'stratagem_api.routing.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
