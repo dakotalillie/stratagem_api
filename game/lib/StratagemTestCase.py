@@ -55,8 +55,8 @@ class StratagemTestCase(TestCase):
 
     def move_displaced(self, unit, destination, coast=''):
         self.request_data['orders'][unit.id] = {
-            'unit_id': str(unit.id),
             'order_type': 'move',
+            'unit_id': str(unit.id),
             'origin': unit.retreating_from.abbreviation,
             'destination': destination,
             'coast': coast,
@@ -68,8 +68,8 @@ class StratagemTestCase(TestCase):
             else 'hold'
         )
         self.request_data['orders'][unit.id] = {
-            'unit_id': str(unit.id),
             'order_type': 'support',
+            'unit_id': str(unit.id),
             'origin': unit.territory.abbreviation,
             'destination': unit.territory.abbreviation,
             'coast': unit.coast,
@@ -84,8 +84,8 @@ class StratagemTestCase(TestCase):
         route = []
         for convoyer in convoyers:
             self.request_data['orders'][convoyer.id] = {
-                'unit_id': str(convoyer.id),
                 'order_type': 'convoy',
+                'unit_id': str(convoyer.id),
                 'origin': convoyer.territory.abbreviation,
                 'destination': convoyer.territory.abbreviation,
                 'coast': '',
@@ -110,11 +110,24 @@ class StratagemTestCase(TestCase):
             'route': route
         })
 
+    def create(self, origin, unit_type, country, coast=''):
+        self.request_data['orders'][origin] = {
+            'order_type': 'create',
+            'origin': origin,
+            'unit_type': unit_type,
+            'country': country,
+            'coast': coast
+        }
+
     def delete(self, unit):
+        if unit.territory:
+            origin = unit.territory.abbreviation
+        elif unit.retreating_from:
+            origin = unit.retreating_from.abbreviation
         self.request_data['orders'][unit.id] = {
-            'unit_id': str(unit.id),
             'order_type': 'delete',
-            'origin': unit.retreating_from.abbreviation,
+            'unit_id': str(unit.id),
+            'origin': origin,
         }
 
     def assertUnitInTerritory(self, unit, territory, coast=None):
@@ -138,3 +151,7 @@ class StratagemTestCase(TestCase):
         self.assertEqual(current_turn.year, year)
         self.assertEqual(current_turn.season, season)
         self.assertEqual(current_turn.phase, phase)
+
+    def assertTerritoryHasUnit(self, terr_abbr):
+        territory = self.game.territories.get(abbreviation=terr_abbr)
+        self.assertIsNotNone(self.game.units.get(territory=territory))

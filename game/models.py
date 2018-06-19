@@ -164,6 +164,8 @@ class Order(models.Model):
                              related_name='orders', blank=True, null=True)
     unit_type = models.CharField(max_length=5,
                                  choices=constants.UNIT_TYPES.as_tuples())
+    country = models.ForeignKey(Country, on_delete=models.CASCADE,
+                                related_name='orders')
     order_type = models.CharField(max_length=7,
                                   choices=constants.ORDER_TYPES.as_tuples())
     origin = models.ForeignKey(Territory, on_delete=models.CASCADE,
@@ -185,5 +187,5 @@ class Order(models.Model):
     aux_destination = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                         blank=True, null=True,
                                         related_name='+')
-    created_at = models.DateTimeField(auto_now_add=True)
     via_convoy = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)

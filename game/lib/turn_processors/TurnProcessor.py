@@ -22,6 +22,9 @@ class TurnProcessor(ABC):
                        if 'destination' in order_data
                        else None)
         coast = order_data['coast'] if 'coast' in order_data else ''
+        country = (self.db_objects.countries[order_data['country']]
+                   if 'country' in order_data
+                   else unit.country)
         unit_type = (order_data['unit_type']
                      if 'unit_type' in order_data
                      else unit.unit_type)
@@ -44,8 +47,9 @@ class TurnProcessor(ABC):
 
         order = Order(
             turn=self.game.current_turn(),
-            unit=self.db_objects.units[order_data['unit_id']],
+            unit=unit,
             unit_type=unit_type,
+            country=country,
             order_type=order_data['order_type'],
             origin=self.db_objects.territories[order_data['origin']],
             destination=destination,
@@ -64,6 +68,8 @@ class TurnProcessor(ABC):
         order = Order(
             turn=self.game.current_turn(),
             unit=unit,
+            unit_type=unit.unit_type,
+            country=unit.country,
             order_type='hold',
             origin=unit.territory,
             destination=unit.territory,
@@ -77,6 +83,8 @@ class TurnProcessor(ABC):
         order = Order(
             turn=self.game.current_turn(),
             unit=unit,
+            unit_type=unit.unit_type,
+            country=unit.country,
             order_type='delete',
             origin=unit.retreating_from
         )
