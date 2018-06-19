@@ -1,8 +1,8 @@
 import uuid
+import json
 from django.db import models
 from authentication.models import Player
-from . import constants
-import json
+from game import constants
 
 
 class Game(models.Model):
@@ -12,63 +12,65 @@ class Game(models.Model):
     title = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # Necessary to resolve unresolved references in PyCharm
-    # objects = models.Manager()
-    # territories = models.Manager()
-    # units = models.Manager()
-    # countries = models.Manager()
-    # turns = models.Manager()
 
     def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
-        # This code will trigger only when the game is first created. It
-        # instantiates the turn/countries/territories/units for the
-        # game.
+        country_players = kwargs.pop('country_players', {})
+        initialize_units = kwargs.pop('initialize_units', False)
+        super(Game, self).save(args, kwargs)
         if len(self.countries.all()) == 0:
-            country_players = kwargs.pop('country_players', {})
-            countries = {c: Country(name=c, game=self,
-                         user=country_players.get(c))
-                         for c in constants.COUNTRY_NAMES}
-            turn = Turn(year=1901, season='spring', phase='diplomatic',
-                        game=self)
+            self.initialize_game(country_players, initialize_units)
 
-            with open('game/data/countries.json') as countries_json:
-                country_data = json.loads(countries_json.read())
+    def initialize_game(self, country_players, initialize_units):
+        countries = {c: Country(name=c, game=self,
+                     user=country_players.get(c))
+                     for c in constants.COUNTRIES.as_list()}
 
-            with open('game/data/territories.json') as territories_json:
-                territories_data = json.loads(territories_json.read())
+        turn = Turn(year=1901, season='spring', phase='diplomatic',
+                    game=self)
 
-            territories = {}
-            units = {}
-            for country, data in country_data.items():
-                for terr_abbr in data['startingTerritories']:
-                    terr = Territory(name=territories_data[terr_abbr]['name'],
-                                     abbreviation=terr_abbr,
-                                     owner=countries[country], game=self)
-                    territories[terr_abbr] = terr
-                for unit_dict in data['startingUnits']:
-                    unit = Unit(unit_type=unit_dict['type'],
-                                country=countries[country],
-                                territory=territories[unit_dict['territory']],
-                                coast=unit_dict['coast'], game=self)
-                    units[unit.territory.abbreviation] = unit
+        with open('game/data/countries.json') as countries_json:
+            country_data = json.loads(countries_json.read())
 
-            for terr_abbr, terr_data in territories_data.items():
-                if terr_abbr not in territories:
-                    terr = Territory(
-                        name=terr_data['name'], abbreviation=terr_abbr,
-                        game=self)
-                    territories[terr_abbr] = terr
+        with open('game/data/territories.json') as territories_json:
+            territories_data = json.loads(territories_json.read())
 
-            super(Game, self).save(args, kwargs)
-            turn.save()
-            for country in countries.values():
-                country.save()
-            for territory in territories.values():
-                territory.save()
-            for unit in units.values():
+        territories = {}
+        for country, data in country_data.items():
+            for terr_abbr in data['startingTerritories']:
+                terr = Territory(name=territories_data[terr_abbr]['name'],
+                                 abbreviation=terr_abbr,
+                                 owner=countries[country], game=self)
+                territories[terr_abbr] = terr
+
+        for terr_abbr, terr_data in territories_data.items():
+            if terr_abbr not in territories:
+                terr = Territory(name=terr_data['name'],
+                                 abbreviation=terr_abbr, game=self)
+                territories[terr_abbr] = terr
+
+        turn.save()
+        for country in countries.values():
+            country.save()
+        for territory in territories.values():
+            territory.save()
+
+        if initialize_units:
+            self.initialize_units(countries, territories)
+
+    def initialize_units(self, countries, territories):
+          
+        with open('game/data/countries.json') as countries_json:
+            country_data = json.loads(countries_json.read())
+
+        for country, data in country_data.items():
+            for unit_dict in data['startingUnits']:
+                unit = Unit(unit_type=unit_dict['type'],
+                            country=countries[country],
+                            territory=territories[unit_dict['territory']],
+                            coast=unit_dict['coast'], game=self)
                 unit.save()
 
     def current_turn(self):
@@ -76,17 +78,9 @@ class Game(models.Model):
 
 
 class Country(models.Model):
-    COUNTRIES = (
-        ('Austria', 'Austria'),
-        ('England', 'England'),
-        ('France', 'France'),
-        ('Germany', 'Germany'),
-        ('Italy', 'Italy'),
-        ('Russia', 'Russia'),
-        ('Turkey', 'Turkey'),
-    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=7, choices=COUNTRIES)
+    name = models.CharField(max_length=7,
+                            choices=constants.COUNTRIES.as_tuples())
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='countries')
     user = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True,
@@ -107,8 +101,6 @@ class Territory(models.Model):
                               blank=True, related_name='territories')
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='territories')
-    # Necessary to avoid unresolved references in PyCharm.
-    # objects = models.Manager()
 
     def __str__(self):
         return self.abbreviation
@@ -118,15 +110,6 @@ class Territory(models.Model):
 
 
 class Unit(models.Model):
-    UNIT_TYPES = (
-        ('army', 'army'),
-        ('fleet', 'fleet')
-    )
-    COASTS = (
-        ('NC', 'north'),
-        ('EC', 'east'),
-        ('SC', 'south')
-    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     territory = models.OneToOneField(Territory, on_delete=models.CASCADE,
                                      blank=True, null=True)
@@ -137,14 +120,14 @@ class Unit(models.Model):
                                         blank=True, null=True,
                                         related_name='+')
     active = models.BooleanField(default=True)
-    unit_type = models.CharField(max_length=5, choices=UNIT_TYPES)
+    unit_type = models.CharField(max_length=5,
+                                 choices=constants.UNIT_TYPES.as_tuples())
     country = models.ForeignKey(Country, on_delete=models.CASCADE,
                                 related_name='units')
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='units')
-    coast = models.CharField(max_length=2, choices=COASTS, blank=True)
-    # Necessary to avoid unresolved references in PyCharm.
-    # objects = models.Manager()
+    coast = models.CharField(max_length=2,
+                             choices=constants.COASTS.as_tuples(), blank=True)
 
     def __str__(self):
         return "%s %s %s" % (self.country, self.unit_type, self.territory)
@@ -165,68 +148,50 @@ class Unit(models.Model):
 
 
 class Turn(models.Model):
-    SEASONS = (
-        ('spring', 'spring'),
-        ('fall', 'fall'),
-    )
-    PHASES = (
-        ('diplomatic', 'diplomatic'),
-        ('retreat', 'retreat'),
-        ('reinforcement', 'reinforcement')
-    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     year = models.PositiveSmallIntegerField(default=1901)
-    season = models.CharField(max_length=6, choices=SEASONS)
-    phase = models.CharField(max_length=13, choices=PHASES)
+    season = models.CharField(max_length=6,
+                              choices=constants.SEASONS.as_tuples())
+    phase = models.CharField(max_length=13,
+                             choices=constants.PHASES.as_tuples())
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='turns')
     created_at = models.DateTimeField(auto_now_add=True)
-    # Necessary to avoid unresolved references in PyCharm.
-    # objects = models.Manager()
 
     def __str__(self):
         return "%s %s %s" % (self.phase, self.season, self.year)
 
 
 class Order(models.Model):
-    ORDER_TYPES = (
-        ('hold', 'hold'),
-        ('move', 'move'),
-        ('support', 'support'),
-        ('convoy', 'convoy'),
-        ('create', 'create')
-    )
-    AUX_ORDER_TYPES = (
-        ('hold', 'hold'),
-        ('move', 'move')
-    )
-    COASTS = (
-        ('NC', 'north'),
-        ('EC', 'east'),
-        ('SC', 'south')
-    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     turn = models.ForeignKey(Turn, on_delete=models.CASCADE,
                              related_name='orders')
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE,
-                             related_name='orders')
-    order_type = models.CharField(max_length=7, choices=ORDER_TYPES)
+                             related_name='orders', blank=True, null=True)
+    unit_type = models.CharField(max_length=5,
+                                 choices=constants.UNIT_TYPES.as_tuples())
+    country = models.ForeignKey(Country, on_delete=models.CASCADE,
+                                related_name='orders')
+    order_type = models.CharField(max_length=7,
+                                  choices=constants.ORDER_TYPES.as_tuples())
     origin = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                related_name='+')
     destination = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                     blank=True, null=True, related_name='+')
-    coast = models.CharField(max_length=2, choices=COASTS, blank=True)
+    coast = models.CharField(max_length=2,
+                             choices=constants.COASTS.as_tuples(), blank=True)
     aux_unit = models.ForeignKey(Unit, on_delete=models.CASCADE, blank=True,
                                  null=True, related_name='+', )
-    aux_order_type = models.CharField(max_length=4, choices=AUX_ORDER_TYPES,
-                                      blank=True)
+    aux_order_type = models.CharField(
+        max_length=4,
+        choices=constants.AUX_ORDER_TYPES.as_tuples(),
+        blank=True
+    )
     aux_origin = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                    blank=True, null=True,
                                    related_name='+')
     aux_destination = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                         blank=True, null=True,
                                         related_name='+')
-    created_at = models.DateTimeField(auto_now_add=True)
     via_convoy = models.BooleanField(default=False)
-    # Necessary to avoid unresolved references in PyCharm.
-    # objects = models.Manager()
+    created_at = models.DateTimeField(auto_now_add=True)

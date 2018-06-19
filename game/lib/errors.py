@@ -1,0 +1,2 @@
+class RouteCannotYetBeResolved(Exception):
+    pass

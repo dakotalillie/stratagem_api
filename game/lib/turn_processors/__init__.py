@@ -1,0 +1,4 @@
+from .DiplomaticTurnProcessor import DiplomaticTurnProcessor
+from .ReinforcementTurnProcessor import ReinforcementTurnProcessor
+from .RetreatTurnProcessor import RetreatTurnProcessor
+from .TurnProcessor import TurnProcessor

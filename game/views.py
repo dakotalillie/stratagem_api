@@ -3,14 +3,12 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+
 from . import models
 from . import serializers
-from .utils import general_utils as gu
-from .utils import diplomatic_utils as du
-from .utils import reinforcement_utils
-from .utils import retreat_utils
-from .utils import update_turn_utils
 from . import constants
+from . import utils
+
 
 import pdb
 
@@ -24,9 +22,9 @@ class Sandbox(APIView):
 
     def post(self, request):
         country_players = {country: request.user for country in
-                           constants.COUNTRY_NAMES}
+                           constants.COUNTRIES.as_list()}
         game = models.Game(title='New Sandbox')
-        game.save(country_players=country_players)
+        game.save(country_players=country_players, initialize_units=True)
         return Response({'game_id': game.id}, status=status.HTTP_201_CREATED)
 
 
@@ -81,23 +79,10 @@ class OrderList(APIView):
             raise Http404
 
     def post(self, request, pk):
-        data = gu.dict_keys_to_snake_case(request.data)
-        pdb.set_trace()
         game = self.get_game(pk)
-        retreat_phase_necessary = False
-        objects = {
-            'game': game,
-            'units': {str(u.id): u for u in game.units.filter(active=True)},
-            'territories': {t.abbreviation: t for t in game.territories.all()},
-            'countries': {c.name: c for c in game.countries.all()}
-        }
-        if game.current_turn().phase == 'diplomatic':
-            retreat_phase_necessary = du.process_diplomatic_turn(objects, data)
-        elif game.current_turn().phase == 'retreat':
-            retreat_utils.process_retreat_turn(objects, data)
-        elif game.current_turn().phase == 'reinforcement':
-            reinforcement_utils.process_reinforcement_turn(objects, data)
-        update_turn_utils.update_turn(game, retreat_phase_necessary)
+        data = utils.dict_keys_to_snake_case(request.data)
+        turn_processor = utils.get_turn_processor(game, data)
+        turn_processor.process_turn()
         serializer = serializers.GameDetailSerializer(game)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
