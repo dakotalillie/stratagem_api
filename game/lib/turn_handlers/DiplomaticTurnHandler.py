@@ -171,18 +171,19 @@ class DiplomaticTurnHandler(TurnHandler):
         sort is not possible due to potential cycles.
         """
         for unit_dict in self.locations.values():
-            unit = list(unit_dict.keys())[0]
-            unit.territory = None
-            unit.save()
+            if len(unit_dict):
+                unit = list(unit_dict.keys())[0]
+                unit.territory = None
+                unit.save()
 
     def _map_new_unit_locations(self):
         orders_mapped_by_unit = {order.unit: order for order in self.orders}
         for territory, unit_dict in self.locations.items():
-            unit = list(unit_dict.keys())[0]
-            coast = unit.coast
-            order = orders_mapped_by_unit[unit]
-            if order.destination == territory:
-                coast = order.coast
-            unit.territory = territory
-            unit.coast = coast
-            unit.save()
+            if len(unit_dict):
+                unit = list(unit_dict.keys())[0]
+                order = orders_mapped_by_unit[unit]
+                unit.territory = territory
+                unit.coast = (order.coast if
+                              order.destination == territory else
+                              unit.coast)
+                unit.save()

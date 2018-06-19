@@ -54,7 +54,11 @@ class StratagemTestCase(TestCase):
             'coast': coast,
         }
 
-    def support(self, unit, aux_unit, aux_order_type, aux_destination):
+    def support(self, unit, aux_unit, aux_destination):
+        aux_order_type = (
+            'move' if aux_destination != aux_unit.territory.abbreviation
+            else 'hold'
+        )
         self.request_data['orders'][unit.id] = {
             'unit_id': str(unit.id),
             'order_type': 'support',
@@ -98,13 +102,11 @@ class StratagemTestCase(TestCase):
             'route': route
         })
 
-    def assertUnitInTerritory(self, unit, territory):
+    def assertUnitInTerritory(self, unit, territory, coast=None):
         new_unit = self.get_unit_by_id(unit.id)
         self.assertEqual(new_unit.territory, self.get_terr(territory))
-
-    def assertUnitCoast(self, unit, coast):
-        new_unit = self.get_unit_by_id(unit.id)
-        self.assertEqual(new_unit.coast, coast)
+        if coast:
+            self.assertEqual(new_unit.coast, coast)
 
     def assertUnitIsDisplaced(self, unit):
         new_unit = self.get_unit_by_id(unit.id)
