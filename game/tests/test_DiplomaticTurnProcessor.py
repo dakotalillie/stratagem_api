@@ -1,6 +1,5 @@
-from game.lib.StratagemTestCase import StratagemTestCase
-from game.lib.turn_processors.DiplomaticTurnProcessor import \
-                                                      DiplomaticTurnProcessor
+from game.lib import StratagemTestCase
+from game.lib.turn_processors import DiplomaticTurnProcessor
 
 
 class SimpleMoveOrderTestCase(StratagemTestCase):

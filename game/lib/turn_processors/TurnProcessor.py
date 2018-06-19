@@ -2,9 +2,7 @@ import json
 from abc import ABC
 
 from game.models import Order
-from game.lib.ObjectsFromDatabase import ObjectsFromDatabase
-
-import pdb
+from game.lib import ObjectsFromDatabase
 
 
 class TurnProcessor(ABC):
@@ -17,10 +15,16 @@ class TurnProcessor(ABC):
         self.orders = []
 
     def _create_order_from_data(self, order_data):
+        unit = (self.db_objects.units[order_data['unit_id']]
+                if 'unit_id' in order_data
+                else None)
         destination = (self.db_objects.territories[order_data['destination']]
                        if 'destination' in order_data
                        else None)
         coast = order_data['coast'] if 'coast' in order_data else ''
+        unit_type = (order_data['unit_type']
+                     if 'unit_type' in order_data
+                     else unit.unit_type)
         aux_unit = None
         aux_order_type = ''
         aux_origin = None
@@ -41,6 +45,7 @@ class TurnProcessor(ABC):
         order = Order(
             turn=self.game.current_turn(),
             unit=self.db_objects.units[order_data['unit_id']],
+            unit_type=unit_type,
             order_type=order_data['order_type'],
             origin=self.db_objects.territories[order_data['origin']],
             destination=destination,

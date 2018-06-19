@@ -1,5 +1,5 @@
-from game.lib.StratagemTestCase import StratagemTestCase
-from game.lib.turn_processors.RetreatTurnProcessor import RetreatTurnProcessor
+from game.lib import StratagemTestCase
+from game.lib.turn_processors import RetreatTurnProcessor
 
 
 class SimpleRetreatMoveTestCase(StratagemTestCase):

@@ -1,8 +1,8 @@
 import uuid
+import json
 from django.db import models
 from authentication.models import Player
-from . import constants
-import json
+from game import constants
 
 
 class Game(models.Model):
@@ -24,7 +24,7 @@ class Game(models.Model):
         country_players = kwargs.pop('country_players', {})
         countries = {c: Country(name=c, game=self,
                      user=country_players.get(c))
-                     for c in constants.COUNTRY_NAMES}
+                     for c in constants.COUNTRIES.as_list()}
         turn = Turn(year=1901, season='spring', phase='diplomatic',
                     game=self)
 
@@ -72,17 +72,9 @@ class Game(models.Model):
 
 
 class Country(models.Model):
-    COUNTRIES = (
-        ('Austria', 'Austria'),
-        ('England', 'England'),
-        ('France', 'France'),
-        ('Germany', 'Germany'),
-        ('Italy', 'Italy'),
-        ('Russia', 'Russia'),
-        ('Turkey', 'Turkey'),
-    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=7, choices=COUNTRIES)
+    name = models.CharField(max_length=7,
+                            choices=constants.COUNTRIES.as_tuples())
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='countries')
     user = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True,
@@ -112,15 +104,6 @@ class Territory(models.Model):
 
 
 class Unit(models.Model):
-    UNIT_TYPES = (
-        ('army', 'army'),
-        ('fleet', 'fleet')
-    )
-    COASTS = (
-        ('NC', 'north'),
-        ('EC', 'east'),
-        ('SC', 'south')
-    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     territory = models.OneToOneField(Territory, on_delete=models.CASCADE,
                                      blank=True, null=True)
@@ -131,12 +114,14 @@ class Unit(models.Model):
                                         blank=True, null=True,
                                         related_name='+')
     active = models.BooleanField(default=True)
-    unit_type = models.CharField(max_length=5, choices=UNIT_TYPES)
+    unit_type = models.CharField(max_length=5,
+                                 choices=constants.UNIT_TYPES.as_tuples())
     country = models.ForeignKey(Country, on_delete=models.CASCADE,
                                 related_name='units')
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='units')
-    coast = models.CharField(max_length=2, choices=COASTS, blank=True)
+    coast = models.CharField(max_length=2,
+                             choices=constants.COASTS.as_tuples(), blank=True)
 
     def __str__(self):
         return "%s %s %s" % (self.country, self.unit_type, self.territory)
@@ -157,19 +142,12 @@ class Unit(models.Model):
 
 
 class Turn(models.Model):
-    SEASONS = (
-        ('spring', 'spring'),
-        ('fall', 'fall'),
-    )
-    PHASES = (
-        ('diplomatic', 'diplomatic'),
-        ('retreat', 'retreat'),
-        ('reinforcement', 'reinforcement')
-    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     year = models.PositiveSmallIntegerField(default=1901)
-    season = models.CharField(max_length=6, choices=SEASONS)
-    phase = models.CharField(max_length=13, choices=PHASES)
+    season = models.CharField(max_length=6,
+                              choices=constants.SEASONS.as_tuples())
+    phase = models.CharField(max_length=13,
+                             choices=constants.PHASES.as_tuples())
     game = models.ForeignKey(Game, on_delete=models.CASCADE,
                              related_name='turns')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -179,37 +157,28 @@ class Turn(models.Model):
 
 
 class Order(models.Model):
-    ORDER_TYPES = (
-        ('hold', 'hold'),
-        ('move', 'move'),
-        ('support', 'support'),
-        ('convoy', 'convoy'),
-        ('create', 'create')
-    )
-    AUX_ORDER_TYPES = (
-        ('hold', 'hold'),
-        ('move', 'move')
-    )
-    COASTS = (
-        ('NC', 'north'),
-        ('EC', 'east'),
-        ('SC', 'south')
-    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     turn = models.ForeignKey(Turn, on_delete=models.CASCADE,
                              related_name='orders')
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE,
-                             related_name='orders')
-    order_type = models.CharField(max_length=7, choices=ORDER_TYPES)
+                             related_name='orders', blank=True, null=True)
+    unit_type = models.CharField(max_length=5,
+                                 choices=constants.UNIT_TYPES.as_tuples())
+    order_type = models.CharField(max_length=7,
+                                  choices=constants.ORDER_TYPES.as_tuples())
     origin = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                related_name='+')
     destination = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                     blank=True, null=True, related_name='+')
-    coast = models.CharField(max_length=2, choices=COASTS, blank=True)
+    coast = models.CharField(max_length=2,
+                             choices=constants.COASTS.as_tuples(), blank=True)
     aux_unit = models.ForeignKey(Unit, on_delete=models.CASCADE, blank=True,
                                  null=True, related_name='+', )
-    aux_order_type = models.CharField(max_length=4, choices=AUX_ORDER_TYPES,
-                                      blank=True)
+    aux_order_type = models.CharField(
+        max_length=4,
+        choices=constants.AUX_ORDER_TYPES.as_tuples(),
+        blank=True
+    )
     aux_origin = models.ForeignKey(Territory, on_delete=models.CASCADE,
                                    blank=True, null=True,
                                    related_name='+')
