@@ -1,6 +1,14 @@
 from rest_framework import serializers
 from rest_framework_jwt.settings import api_settings
+from authentication.models import Player
 from .models import Game, Turn, Country, Territory, Unit
+
+
+class UserLowDetailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Player
+        fields = ('id',)
 
 
 class CountryOverviewSerializer(serializers.ModelSerializer):
@@ -47,9 +55,13 @@ class UnitSerializer(serializers.ModelSerializer):
 
 class CountrySerializer(serializers.ModelSerializer):
 
+    user = serializers.SerializerMethodField()
     territories = TerritorySerializer(many=True, read_only=True)
     units = serializers.SerializerMethodField()
     retreating_units = serializers.SerializerMethodField()
+
+    def get_user(self, obj):
+        return str(obj.user)
 
     def get_units(self, obj):
         if len(obj.units.all()) > 0:
@@ -66,7 +78,7 @@ class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ('id', 'user', 'name', 'territories', 'units',
-                  'retreating_units')
+                  'retreating_units', 'ready', 'active')
 
 
 class TurnSerializer(serializers.ModelSerializer):

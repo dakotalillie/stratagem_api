@@ -28,6 +28,7 @@ class DiplomaticTurnProcessor(TurnProcessor):
         self._resolve_conflicts()
         self._update_unit_locations()
         self._update_turn()
+        self._reset_country_ready_states()
         if self.game.current_turn().phase == 'reinforcement':
             self._update_territory_owners()
 
@@ -97,7 +98,7 @@ class DiplomaticTurnProcessor(TurnProcessor):
                 season=current_turn.season,
                 phase='retreat'
             )
-        elif (not self.retreat_phase_necessary and 
+        elif (not self.retreat_phase_necessary and
               current_turn.season == 'fall'):
             self.game.turns.create(
                 year=current_turn.year,

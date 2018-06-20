@@ -15,6 +15,7 @@ class RetreatTurnProcessor(TurnProcessor):
         self._deactivate_units_in_conflicts()
         self._update_unit_locations()
         self._update_turn()
+        self._reset_country_ready_states()
         if self.game.current_turn().phase == 'reinforcement':
             self._update_territory_owners()
 

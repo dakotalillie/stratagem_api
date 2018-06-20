@@ -7,6 +7,7 @@ class ReinforcementTurnProcessor(TurnProcessor):
         self._create_orders()
         self._process_orders()
         self._update_turn()
+        self._reset_country_ready_states()
 
     def _create_orders(self):
         for order_data in self.request_data['orders'].values():

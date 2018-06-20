@@ -103,3 +103,8 @@ class TurnProcessor(ABC):
             if unit.country != unit.territory.owner and not water_terr:
                 unit.territory.owner = unit.country
                 unit.territory.save()
+
+    def _reset_country_ready_states(self):
+        for country in self.db_objects.countries.values():
+            country.ready = False
+            country.save()
