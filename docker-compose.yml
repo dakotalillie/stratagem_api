@@ -1,0 +1,15 @@
+version: '3'
+services:
+  stratagem_api:
+    build: .
+    depends_on:
+      - mysql_server
+    env_file: env/.env
+    image: stratagem_api
+    ports:
+      - 8000:8000
+  mysql_server:
+    env_file: env/db.env
+    image: mysql:5.7
+    ports:
+      - 3306:3306
