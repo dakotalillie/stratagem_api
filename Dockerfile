@@ -8,4 +8,4 @@ COPY . .
 ENV PATH=/root/.local/bin:$PATH
 RUN pipenv install
 
-CMD ./bin/startup.sh
+CMD ./bin/start_docker.sh
